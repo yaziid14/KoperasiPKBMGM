@@ -4,16 +4,13 @@ import os
 import re
 import jwt
 import time
-import base64
 import hashlib
 import logging
-import cv2
 import numpy as np
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from os.path import join, dirname
-from PIL import Image
-from bson import ObjectId, json_util
+from bson import json_util
 from flask import Flask, render_template, request, jsonify, redirect, url_for, current_app as app
 from pymongo import MongoClient
 from dotenv import load_dotenv
