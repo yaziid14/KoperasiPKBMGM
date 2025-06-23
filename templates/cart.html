@@ -266,7 +266,7 @@
                     let hargaText = $(this).text();
                     let harga = Number(hargaText.replace(/\D/g, ''));
                     let jumlah = Number($(`#jumlah-${index}`).text());
-                    let judul1 = $(`#judul-${index}`).text();
+                    let judul1 = $(`#judul-${index}`).text().trim();
 
                     if (jumlah > 0 && harga > 0) {
                         dataPesanan.push({ judul: judul1, jumlah: jumlah, harga: harga });
@@ -283,8 +283,6 @@
                     });
                     return;
                 }
-
-                Swal.fire("Sukses", result.msg, "success");
                 check_out(dataPesanan);
             } catch (e) {
                 console.error(e);

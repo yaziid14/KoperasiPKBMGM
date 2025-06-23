@@ -315,6 +315,69 @@
                 }
             });
         }
+
+        let currentOrderId = '';
+
+        function openChat(orderid) {
+            currentOrderId = orderid;
+            document.getElementById('chatOrderId').innerText = `Order ID: ${orderid}`;
+            $('#liveChatModal').modal('show');
+            loadChat();
+        }
+
+        async function loadChat() {
+            if (!currentOrderId) return;
+
+            try {
+                const res = await fetch(`/getchat?orderid=${currentOrderId}`);
+                const data = await res.json();
+
+                const chatBox = document.getElementById("chatBox");
+                chatBox.innerHTML = '';
+
+                if (data.result === 'success') {
+                    const currentUser = getCookie('username');
+
+                    data.chat.forEach(c => {
+                        const roleClass = c.sender === currentUser ? 'user' : 'admin';
+
+                        chatBox.innerHTML += `
+                    <div class="chat-message ${roleClass}">
+                        <div class="sender-name"><b>${c.sender}</b></div>
+                        <div class="bubble">${c.message}</div>
+                        <div class="timestamp">${formatTime(c.timestamp)}</div>
+                    </div>`;
+                    });
+
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            } catch (err) {
+                console.error("Gagal memuat chat:", err);
+            }
+        }
+
+        async function sendMessage() {
+            const pesan = document.getElementById("chatMessage").value.trim();
+            if (!pesan || !currentOrderId) return;
+
+            try {
+                const res = await fetch('/sendchat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderid: currentOrderId, message: pesan })
+                });
+
+                const data = await res.json();
+                if (data.result === 'success') {
+                    document.getElementById("chatMessage").value = '';
+                    loadChat();
+                } else {
+                    Swal.fire("Gagal", data.message || "Pesan gagal dikirim", "error");
+                }
+            } catch (err) {
+                Swal.fire("Error", "Kesalahan saat mengirim pesan", "error");
+            }
+        }
     </script>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

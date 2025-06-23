@@ -545,8 +545,16 @@ body {
   font-size: 0.75rem;
   color: #6c757d;
   margin-top: 4px;
+}
+
+.chat-message.user .timestamp {
   text-align: right;
 }
+
+.chat-message.admin .timestamp {
+  text-align: left;
+}
+
 
 #faceModal {
   display: none;
@@ -626,4 +634,3 @@ body {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   animation: fadeIn 0.3s ease-in-out;
 }
-

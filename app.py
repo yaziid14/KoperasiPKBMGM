@@ -64,19 +64,21 @@ def send_chat():
     orderid = data.get('orderid')
     message = data.get('message')
 
-    # Ambil username dari cookie
     username = request.cookies.get('username')
     role = request.cookies.get('role')
 
     if not orderid or not message or not username:
         return jsonify({'result': 'error', 'message': 'Data tidak lengkap atau cookie tidak ditemukan'})
 
+    now = datetime.now(ZoneInfo("Asia/Jakarta"))
+    mytime_str = now.strftime('%Y-%m-%d %H:%M:%S')
+
     db.livechat.insert_one({
         'orderid': orderid,
         'sender': username,
         'role': role,
         'message': message,
-        'timestamp': datetime.now(ZoneInfo("Asia/Jakarta"))
+        'timestamp': mytime_str
     })
 
     return jsonify({'result': 'success'})
@@ -88,20 +90,17 @@ def get_chat():
     if not orderid:
         return jsonify({'result': 'error', 'message': 'Order ID diperlukan'})
 
-    # Cek apakah order masih ada di koleksi orderan
     order = db.orderan.find_one({'order_id': orderid})
     if not order:
-        # Jika tidak ada, hapus semua chat dengan orderid tersebut
         deleted = db.livechat.delete_many({'orderid': orderid})
         return jsonify({'result': 'error', 'message': f'Order tidak ditemukan. {deleted.deleted_count} chat telah dihapus.'})
 
-    # Ambil dan kembalikan daftar chat
     chat_cursor = db.livechat.find({'orderid': orderid}).sort('timestamp', 1)
     chat_list = [
         {
             'sender': c['sender'],
             'message': c['message'],
-            'timestamp': c['timestamp'].isoformat()
+            'timestamp': c['timestamp']  # sudah dalam string format
         }
         for c in chat_cursor
     ]
@@ -251,8 +250,33 @@ def radmin():
     return jsonify({'result': 'success'})
 
 
-@app.route('/buku')
-def buku():
+@app.route('/hanyabarang')
+def hanyabarang():
+    book_list = list(db.barang.find({}, {'_id': False}))
+    return jsonify({
+        'daftarbuku': book_list
+    })
+
+
+@app.route('/barang')
+def barang():
+    user_receive = request.cookies.get("username")
+    book_list = list(db.barang.find({}, {'_id': False}))
+    favorite_list = list(db.favorite.find(
+        {'username': user_receive}, {'_id': False}))
+    cart_list = list(db.cart.find({'username': user_receive}, {'_id': False}))
+    order_list = list(db.orderan.find({}, {'_id': False}))
+
+    return jsonify({
+        'daftarbuku': book_list,
+        'daftarfavorite': favorite_list,
+        'daftarkeranjang': cart_list,
+        'daftarorder': order_list
+    })
+
+
+@app.route('/dbadmin')
+def dbadmin():
     user_receive = request.cookies.get("username")
     book_list = list(db.barang.find({}, {'_id': False}))
     user_list = list(db.login.find({'role': 'user'}, {'_id': False}))
@@ -268,6 +292,22 @@ def buku():
         'daftarkeranjang': cart_list,
         'daftarorder': order_list
     })
+
+
+@app.route('/hapus-user', methods=['POST'])
+def hapus_user():
+    username = request.form.get('username_give')
+    db.login.delete_one({'username': username})
+    return jsonify({'msg': f'User {username} berhasil dihapus.'})
+
+
+@app.route('/reset-password', methods=['POST'])
+def reset_password():
+    username = request.form.get('username_give')
+    default_pw = hashlib.sha256('12345678'.encode()).hexdigest()
+    db.login.update_one({'username': username}, {
+                        '$set': {'password': default_pw}})
+    return jsonify({'msg': f'Password user {username} berhasil direset ke 12345678.'})
 
 
 @app.route('/tambah')
@@ -338,7 +378,14 @@ def profile():
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=["HS256"])
         username = payload.get('id')
+
         user_info = db.login.find_one({"username": username}, {"_id": False})
+
+        # Tambahkan status verifikasi wajah dari db.descriptors
+        verifikasi = db.descriptors.find_one({"username": username})
+        user_info["verifikasi_wajah"] = bool(
+            verifikasi and verifikasi.get("verifikasi") == True)
+
         return render_template("profile.html", user_info=user_info)
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("login"))
@@ -505,7 +552,7 @@ def orderan():
 
         # Ambil cover dan AllCover dari koleksi barang
         book = db.barang.find_one({'JudulBuku': judul}, {
-                                  '_id': False, 'Cover': True, 'AllCover': True})
+            '_id': False, 'Cover': True, 'AllCover': True})
         cover = book.get('Cover', '') if book else ''
         all_cover = book.get('AllCover', []) if book else []
 
@@ -516,21 +563,21 @@ def orderan():
             'cover': cover,
             'AllCover': all_cover,
             'status': 'Belum Bayar',
-            'waktu': now
+            'waktu': now,
         })
 
         items_to_save.append(item)
 
-        # Kurangi stok
+        # Kurangi stok buku
         db.barang.update_one({'JudulBuku': judul}, {'$inc': {'Stok': -jumlah}})
 
     if not items_to_save:
         return jsonify({'result': 'error', 'msg': 'Tidak ada item valid untuk disimpan'}), 400
 
-    # Simpan ke koleksi orderan
+    # Simpan semua item ke database
     db.orderan.insert_many(items_to_save)
 
-    # Hapus keranjang user
+    # Kosongkan keranjang user
     db.cart.delete_many({'username': username_receive})
 
     return jsonify({
@@ -539,6 +586,24 @@ def orderan():
         'order_id': order_id,
         'jumlah_item': len(items_to_save)
     })
+
+
+@app.route('/bayar-test', methods=['POST'])
+def bayar_test():
+    orderid = request.form.get('orderid_give')
+
+    if not orderid:
+        return jsonify({'result': 'error', 'msg': 'Order ID tidak ditemukan'})
+
+    result = db.orderan.update_many(
+        {'order_id': orderid, 'status': 'Belum Bayar'},
+        {'$set': {'status': 'Sudah Bayar'}}
+    )
+
+    if result.modified_count > 0:
+        return jsonify({'result': 'success', 'msg': 'Status berhasil diubah menjadi "sudah bayar"'})
+    else:
+        return jsonify({'result': 'error', 'msg': 'Tidak ada pesanan yang diupdate'})
 
 
 @app.route('/bayar', methods=['POST'])
@@ -657,36 +722,53 @@ def orders():
     return render_template('pesanan.html')
 
 
+@app.route('/orderadmin')
+def orderadmin():
+    return render_template('orderadmin.html')
+
+
 @app.route('/showorder')
 def showorder():
     user_receive = request.cookies.get("username")
     now = datetime.now(ZoneInfo("Asia/Jakarta"))
 
-    # Ambil semua pesanan user
     order_list = list(db.orderan.find(
         {'username': user_receive}, {'_id': False}))
 
     orders_list = []
 
     for order in order_list:
-        # Pastikan ini disimpan sebagai datetime
-        order_time = order.get('order_time')
-        if order_time:
-            # Jika order_time dalam format string ISO, ubah ke datetime
-            if isinstance(order_time, str):
-                order_time = datetime.fromisoformat(order_time)
+        tanggal_str = order.get('tanggal')  # string: "2025-06-23 23:22:06"
 
-            # Hapus pesanan jika sudah lebih dari 1 hari
-            if now - order_time > timedelta(days=1):
-                db.orderan.delete_one({'order_id': order['order_id']})
-                continue  # Lewati penambahan ke list karena sudah dihapus
+        try:
+            order_time = datetime.strptime(
+                tanggal_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Asia/Jakarta"))
+        except:
+            order_time = now  # fallback jika parsing gagal
 
-        order_detail = db.orderan.find_one(
+        # Hapus jika lebih dari 1 hari dan status belum bayar
+        if order.get('status', '').lower() == 'belum bayar' and now - order_time > timedelta(days=1):
+            judul = order.get('judul') or order.get('judul')
+            jumlah = int(order.get('jumlah') or order.get('jumlah', 0))
+
+            if judul and jumlah > 0:
+                db.barang.update_one(
+                    {'JudulBuku': judul},
+                    {'$inc': {'Stok': jumlah}}
+                )
+
+            db.orderan.delete_one({'order_id': order['order_id']})
+            continue
+
+        # Cek status pembatalan jika ada
+        pembatalan = db.pembatalan.find_one(
             {'order_id': order['order_id']}, {'_id': False})
-        if order_detail:
-            orders_list.append(order_detail)
+        order['status_pembatalan'] = pembatalan.get(
+            'status', 'diajukan') if pembatalan else None
 
-    return jsonify({'daftarorderan': orders_list, 'daftarorder': order_list})
+        orders_list.append(order)
+
+    return jsonify({'daftarorderan': orders_list, 'daftarorder': orders_list})
 
 
 @app.route('/hapus-pesanan', methods=['POST'])
@@ -696,12 +778,31 @@ def hapus_pesanan():
     if not order_id:
         return jsonify({'result': 'error', 'msg': 'Order ID tidak diberikan'}), 400
 
-    result = db.orderan.delete_one({'order_id': order_id})
+    # Ambil semua item pesanan dengan order_id tersebut
+    items = list(db.orderan.find({'order_id': order_id}))
 
-    if result.deleted_count == 1:
-        return jsonify({'result': 'success', 'msg': 'Pesanan berhasil dihapus'})
-    else:
-        return jsonify({'result': 'error', 'msg': 'Pesanan tidak ditemukan atau gagal dihapus'}), 404
+    if not items:
+        return jsonify({'result': 'error', 'msg': 'Pesanan tidak ditemukan'}), 404
+
+    # Kembalikan stok barang
+    for item in items:
+        judul = item.get('judul')
+        jumlah = int(item.get('jumlah', 0))
+        if judul and jumlah > 0:
+            db.barang.update_one({'JudulBuku': judul}, {
+                                 '$inc': {'Stok': jumlah}})
+
+    # Hapus semua dokumen pesanan dengan order_id yang sama
+    result = db.orderan.delete_many({'order_id': order_id})
+
+    return jsonify({'result': 'success', 'msg': f'Pesanan berhasil dihapus ({result.deleted_count} item), stok dikembalikan'})
+
+
+@app.route("/batal-pembatalan", methods=["POST"])
+def batal_pembatalan():
+    order_id = request.form.get("order_id")
+    db.pembatalan.delete_one({"order_id": order_id})
+    return jsonify({"msg": "Permintaan pembatalan dibatalkan"})
 
 
 @app.route('/detail/<book>')
@@ -824,17 +925,33 @@ def search(kata):
 def hapus_pesanan_kadaluarsa():
     """
     Menghapus pesanan dari koleksi 'orderan' yang berstatus 'belum bayar'
-    dan dibuat lebih dari 1 hari yang lalu.
+    dan dibuat lebih dari 1 hari yang lalu, serta mengembalikan stoknya ke koleksi 'barang'.
     """
     try:
         batas_waktu = datetime.now(
             ZoneInfo("Asia/Jakarta")) - timedelta(days=1)
+
+        # Cari semua pesanan kadaluarsa
+        pesanan_kadaluarsa = list(db.orderan.find({
+            "status": "belum bayar",
+            "waktu": {"$lt": batas_waktu}
+        }))
+
+        # Kembalikan stok barang
+        for item in pesanan_kadaluarsa:
+            judul = item.get('judul')
+            jumlah = int(item.get('jumlah', 0))
+            if judul and jumlah > 0:
+                db.barang.update_one({'JudulBuku': judul}, {
+                                     '$inc': {'Stok': jumlah}})
+
+        # Hapus pesanan kadaluarsa
         hasil = db.orderan.delete_many({
             "status": "belum bayar",
             "waktu": {"$lt": batas_waktu}
         })
-        print(
-            f"{hasil.deleted_count} pesanan kadaluarsa berstatus 'belum bayar' telah dihapus.")
+
+        print(f"{hasil.deleted_count} pesanan kadaluarsa berstatus 'belum bayar' telah dihapus dan stok dikembalikan.")
     except Exception as e:
         print(f"Terjadi kesalahan saat menghapus pesanan kadaluarsa: {e}")
 
@@ -849,30 +966,39 @@ def simpan_wajah():
     try:
         data = request.json
         username = data.get('username')
-        descriptor = data.get('descriptor')  # list of 128 floats
+        descriptor = data.get('descriptor')
 
         if not username or descriptor is None:
             return jsonify({"result": "error", "msg": "Data tidak lengkap"}), 400
 
+        # Simpan file .npy ke direktori lokal
         save_dir = os.path.join('static', 'face_descriptors', username)
         os.makedirs(save_dir, exist_ok=True)
 
-        # Simpan sebagai file NumPy
         filename = f"{username}_{len(os.listdir(save_dir))}.npy"
         filepath = os.path.join(save_dir, filename)
         np.save(filepath, np.array(descriptor))
 
-        # Hapus descriptor lama jika lebih dari 5
+        # Batasi maksimal 5 file descriptor
         all_files = sorted(
             [f for f in os.listdir(save_dir) if f.endswith('.npy')],
             key=lambda x: os.path.getctime(os.path.join(save_dir, x))
         )
-
         if len(all_files) > 5:
-            for old_file in all_files[:-5]:  # Sisakan 5 terakhir
+            for old_file in all_files[:-5]:
                 os.remove(os.path.join(save_dir, old_file))
 
-        return jsonify({"result": "success", "msg": f"Descriptor disimpan sebagai: {filename}"})
+        # Simpan status verifikasi ke MongoDB
+        db.descriptors.update_one(
+            {"username": username},
+            {"$set": {
+                "username": username,
+                "verifikasi": True
+            }},
+            upsert=True
+        )
+
+        return jsonify({"result": "success", "msg": f"Descriptor disimpan dan status verifikasi dicatat."})
 
     except Exception as e:
         return jsonify({"result": "error", "msg": f"Gagal menyimpan descriptor: {str(e)}"}), 500
@@ -912,6 +1038,35 @@ def verifikasi_wajah():
 
     except Exception as e:
         return jsonify({"result": "error", "msg": f"Error saat verifikasi: {str(e)}"}), 500
+
+
+@app.route("/ajukan-pembatalan", methods=["POST"])
+def ajukan_pembatalan():
+    try:
+        id_receive = request.form["id_give"]
+        username = request.form["username_give"]
+
+        order = db.orderan.find_one({'order_id': id_receive})
+
+        if not order:
+            return jsonify({"msg": "Pesanan tidak ditemukan."})
+
+        # Cek jika sudah diajukan pembatalan sebelumnya
+        existing = db.pembatalan.find_one({"order_id": id_receive})
+        if existing:
+            return jsonify({"msg": "Pembatalan sudah diajukan sebelumnya."})
+
+        db.pembatalan.insert_one({
+            "order_id": id_receive,
+            "username": username,
+            "status": "diajukan",  # bisa juga 'pending'
+            "waktu": datetime.now(ZoneInfo("Asia/Jakarta"))
+        })
+
+        return jsonify({"msg": "Pembatalan berhasil diajukan ke admin."})
+    except Exception as e:
+        print(e)
+        return jsonify({"msg": "Terjadi kesalahan saat mengajukan pembatalan."})
 
 
 if __name__ == '__main__':

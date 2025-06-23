@@ -99,17 +99,46 @@
             {% for search in hasil %}
             {% set url = search['URL'] %}
             {% set cover = search['Cover'] %}
+            {% set all_cover = search['AllCover'] %}
             {% set judul = search['JudulBuku'] %}
-            {% set harga = search['Harga'] %}
+            {% set stok = search['Stok'] %}
+            {% set harga = '{:,.0f}'.format(search['Harga']).replace(',', '.') %}
+            {% set carousel_id = 'carousel-' ~ loop.index %}
+
             <div class="col">
-                <div class="card card-book h-100">
-                    <a href="/detail/{{ url }}"><img src="/static/{{ cover }}" class="card-img-top card-book-img"
-                            alt="Book"></a>
-                    <div class="card-body">
-                        <h5 class="semibold" id="{{ url }}">{{ judul }}</h5>
+                <div class="card card-book">
+                    <!-- Carousel Cover -->
+                    <div id="{{ carousel_id }}" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            {% for img in all_cover %}
+                            <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                <img src="/static/{{ img }}" class="d-block w-100 card-book-img" alt="Cover Buku">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if all_cover|length > 1 %}
+                        <button class="carousel-control-prev" type="button" data-bs-target="#{{ carousel_id }}"
+                            data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#{{ carousel_id }}"
+                            data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                        {% endif %}
                     </div>
-                    <h5 class="regular py-2" style="color: #004AD8;">{{ harga }}</h5>
-                    <div class="d-flex justify-content-center">
+                    <div class="card-body">
+                        <h5 id="{{ url }}"
+                            class="fw-semibold text-center text-truncate d-flex align-items-center justify-content-center"
+                            style="min-height: 3rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
+                            {{ judul }}
+                        </h5>
+                        <h6>Stok : {{ stok }}</h6>
+                        <h5 class="regular harga">Rp.{{ harga }}</h5>
+                    </div>
+                    <div class="d-flex justify-content-center pb-3">
                         <a href="/edit/{{ url }}" class="btn semibold card-admin-btn"
                             style="background-color: #0A868C;">Edit</a>
                         <button onclick="deleteadm('#{{ url }}')" class="btn semibold card-admin-btn ms-3"
@@ -119,12 +148,13 @@
             </div>
             {% endfor %}
             {% else %}
-            <div class="" id="nothing" style="width: 100%;">
+            <div id="nothing" style="width: 100%;">
                 <h1 class="text-center">Nama barang tidak ditemukan</h1>
             </div>
             {% endif %}
         </div>
     </div>
+
 
     <div class="container" id="carduser">
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4 my-5" id="card-book">
@@ -133,31 +163,32 @@
             {% set url = search['URL'] %}
             {% set covers = search['AllCover'] if 'AllCover' in search else [search['Cover']] %}
             {% set judul = search['JudulBuku'] %}
-            {% set harga = search['Harga'] %}
+            {% set harga = '{:,.0f}'.format(search['Harga']).replace(',', '.') %}
             {% set stok = search['Stok'] %}
             {% set is_fav = url in daftarfavorite %}
             {% set is_cart = url in daftarkeranjang %}
+            {% set carousel_id = 'carousel-user-' ~ loop.index %}
 
             <div class="col">
                 <div class="card card-book h-100">
                     <a href="/detail/{{ url }}">
                         {% if covers | length > 1 %}
-                        <div id="carousel-{{ loop.index }}" class="carousel slide" data-bs-ride="carousel">
+                        <div id="{{ carousel_id }}" class="carousel slide" data-bs-ride="carousel">
                             <div class="carousel-inner">
                                 {% for c in covers %}
-                                <div class="carousel-item {% if loop.index == 1 %}active{% endif %}">
+                                <div class="carousel-item {% if loop.first %}active{% endif %}">
                                     <img src="/static/{{ c }}" class="d-block w-100 card-book-img1"
                                         alt="cover-{{ loop.index0 }}">
                                 </div>
                                 {% endfor %}
                             </div>
-                            <button class="carousel-control-prev" type="button"
-                                data-bs-target="#carousel-{{ loop.index }}" data-bs-slide="prev">
+                            <button class="carousel-control-prev" type="button" data-bs-target="#{{ carousel_id }}"
+                                data-bs-slide="prev">
                                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                                 <span class="visually-hidden">Previous</span>
                             </button>
-                            <button class="carousel-control-next" type="button"
-                                data-bs-target="#carousel-{{ loop.index }}" data-bs-slide="next">
+                            <button class="carousel-control-next" type="button" data-bs-target="#{{ carousel_id }}"
+                                data-bs-slide="next">
                                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
                                 <span class="visually-hidden">Next</span>
                             </button>
@@ -167,10 +198,14 @@
                         {% endif %}
                     </a>
 
-                    <div class="card-body">
-                        <h5 class="semibold">{{ judul }}</h5>
+                    <div class="card-body mt-3">
+                        <h5 id="{{ url }}"
+                            class="fw-semibold text-center text-truncate d-flex align-items-center justify-content-center"
+                            style="min-height: 3rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
+                            {{ judul }}
+                        </h5>
                         <h6>Stok : {{ stok }}</h6>
-                        <h5 class="regular py-2 harga">{{ search['HargaFormat'] }}</h5>
+                        <h5 class="regular harga">Rp.{{ harga }}</h5>
                     </div>
 
                     <div class="d-flex justify-content-between px-2 pb-3">

@@ -35,11 +35,13 @@ function sign_in() {
                 }
             } else {
                 Swal.fire({
-                    icon: 'error',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-                    title: 'Gagal Login',
-                    text: response["msg"],
-                    confirmButtonColor: '#625f5f',
-                    confirmButtonText: 'OK'
+                    toast: true,
+                    position: 'top-start',
+                    icon: 'error',
+                    title: response["msg"],
+                    showConfirmButton: false,
+                    timer: 1000,
+                    timerProgressBar: true
                 });
             }
         },
@@ -113,15 +115,18 @@ function check_id() {
     let username = $("#inputUsername").val();
     if (!username) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan input username',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan input username',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
         });
     }
+
     let helpUS = $("#inputUsername");
-    let helpId = $("#helpId");
+    let helpId = $("#helpId"); // pastikan ini adalah elemen <i> ikon
     $.ajax({
         type: "POST",
         url: "/check_id",
@@ -131,31 +136,38 @@ function check_id() {
         success: function (response) {
             if (response["exists"]) {
                 Swal.fire({
-                    icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-                    title: 'Warning!',
-                    text: 'Username sudah digunakan',
-                    confirmButtonColor: '#625f5f',
-                    confirmButtonText: 'OK'
+                    toast: true,
+                    position: 'top-start',
+                    icon: 'warning',
+                    title: 'Username sudah digunakan',
+                    showConfirmButton: false,
+                    timer: 1000,
+                    timerProgressBar: true
                 });
-                helpId.removeClass("fa-user")
-                    .removeClass("fa-check")
-                    .addClass("fa-times");
+                helpId
+                    .removeClass("fa-solid fa-user")
+                    .removeClass("fa-solid fa-check")
+                    .addClass("fa-solid fa-xmark"); // ganti dari fa-times ke fa-xmark (di FA 6.5)
             } else {
                 Swal.fire({
-                    icon: 'success',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-                    title: 'Berhasil!',
-                    text: 'Username bisa digunakan',
-                    confirmButtonColor: '#625f5f',
-                    confirmButtonText: 'OK'
+                    toast: true,
+                    position: 'top-start',
+                    icon: 'success',
+                    title: 'Username bisa digunakan',
+                    showConfirmButton: false,
+                    timer: 1000,
+                    timerProgressBar: true
                 });
-                helpId.removeClass("fa-user")
-                    .removeClass("fa-times")
-                    .addClass("fa-check");
-                helpUS.attr("disabled", true)
+                helpId
+                    .removeClass("fa-solid fa-user")
+                    .removeClass("fa-solid fa-xmark")
+                    .addClass("fa-solid fa-check");
+                helpUS.attr("disabled", true);
             }
         },
     });
 }
+
 
 function sign_out() {
     const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
@@ -189,11 +201,13 @@ function favorite(para) {
             success: function (response) {
                 if (response.result === 'success') {
                     Swal.fire({
+                        toast: true,
+                        position: 'top-start',
                         icon: 'info',
-                        title: 'Terhapus!',
-                        text: 'Terhapus dari favorite',
-                        confirmButtonColor: '#625f5f',
-                        confirmButtonText: 'OK'
+                        title: 'Terhapus dari favorite',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
                     }).then(() => {
                         // Jika user sedang di halaman /favorite, reload list favorit
                         if (window.location.pathname === "/favorite") {
@@ -226,11 +240,13 @@ function favorite(para) {
             success: function (response) {
                 if (response.result === 'success') {
                     Swal.fire({
+                        toast: true,
+                        position: 'top-start',
                         icon: 'success',
-                        title: 'Berhasil!',
-                        text: 'Ditambahkan ke favorite',
-                        confirmButtonColor: '#625f5f',
-                        confirmButtonText: 'OK'
+                        title: 'Ditambahkan ke favorite',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
                     });
                 } else {
                     Swal.fire({
@@ -266,11 +282,13 @@ function keranjang(para) {
             success: function (response) {
                 if (response.result === 'success') {
                     Swal.fire({
+                        toast: true,
+                        position: 'top-start',
                         icon: 'info',
-                        title: 'Terhapus!',
-                        text: 'Terhapus dari keranjang',
-                        confirmButtonColor: '#625f5f',
-                        confirmButtonText: 'OK'
+                        title: 'Terhapus dari keranjang',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
                     });
                 } else {
                     Swal.fire({
@@ -299,11 +317,13 @@ function keranjang(para) {
             success: function (response) {
                 if (response.result === 'success') {
                     Swal.fire({
+                        toast: true,
+                        position: 'top-start',
                         icon: 'success',
-                        title: 'Berhasil!',
-                        text: 'Ditambahkan ke keranjang',
-                        confirmButtonColor: '#625f5f',
-                        confirmButtonText: 'OK'
+                        title: 'Ditambahkan ke keranjang',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
                     });
                 } else {
                     Swal.fire({
@@ -324,11 +344,13 @@ function cari() {
     let kata = $("#cari").val()
     if (!kata) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Kata masih kosong',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Kata masih kosong',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
     let url = kata.replaceAll(/[^0-9a-zA-Z -]/g, '').toLowerCase();
@@ -348,20 +370,24 @@ function deleteadm(para) {
             success: function (response) {
                 if (response.result === 'success') {
                     Swal.fire({
-                        icon: 'success',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-                        title: 'Berhasil!',
-                        text: response["msg"],
-                        confirmButtonColor: '#625f5f',
-                        confirmButtonText: 'OK'
+                        toast: true,
+                        position: 'top-start',
+                        icon: 'success',
+                        title: response["msg"],
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
                     });
                     tampil_admin();
                 } else {
                     Swal.fire({
-                        icon: 'error',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-                        title: 'Gagal!',
-                        text: 'Ada yang salah',
-                        confirmButtonColor: '#625f5f',
-                        confirmButtonText: 'OK'
+                        toast: true,
+                        position: 'top-start',
+                        icon: 'error',
+                        title: 'Ada yang salah',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
                     });
                 }
             }
@@ -374,7 +400,7 @@ function deleteadm(para) {
 function tampil_admin() {
     $.ajax({
         type: 'GET',
-        url: '/buku',
+        url: '/dbadmin',
         data: {},
         success: function (response) {
             let rows = response['daftarbuku'];
@@ -388,14 +414,17 @@ function tampil_admin() {
                 <div class="box box-bg1 my-2 mx-2">
                     <div class="info">
                         <h3 class="semibold">Pengguna</h3>
-                        <p class="count regular"><b style="color: #004ad880;">${count1}</b> Pengguna</p>
+                        <p class="count regular">
+                            <b style="color: #004ad880;">${count1}</b>
+                            <a onclick="lihatUser()" data-bs-toggle="modal" data-bs-target="#userModal">Pengguna</a>
+                        </p>
                     </div>
                     <i class="fa fa-user"></i>
                 </div>
                 <div class="box box-bg2 my-2 mx-2">
                     <div class="info">
                         <h3 class="semibold">Transaksi</h3>
-                        <p class="count regular"><b style="color: #d8410080;">${count}</b> Orders</p>
+                        <p class="count regular"><b style="color: #d8410080;">${count}</b> <a onclick="lihatOrder()">Orders</a></p>
                     </div>
                     <i class="fa fa-shopping-cart"></i>
                 </div>`;
@@ -450,7 +479,10 @@ function tampil_admin() {
                     <div class="card card-book">
                         <a href="/detail/${url}">${carouselHTML}</a>
                         <div class="card-body mt-3">
-                            <h5 class="semibold" id="${url}">${judul}</h5>
+                            <h5 id="${url}" class="fw-semibold text-center text-truncate d-flex align-items-center justify-content-center"
+                                style="min-height: 3rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
+                            ${judul}
+                            </h5>
                             <h6>Stok : ${stok}</h6>
                             <h5 class="regular harga">Rp.${harga.toLocaleString('id-ID')}</h5>
                         </div>
@@ -467,12 +499,15 @@ function tampil_admin() {
     });
 }
 
+function lihatOrder() {
+    window.location.href = '/orderadmin';
+}
 
 // Page user
 function tampil_user() {
     $.ajax({
         type: 'GET',
-        url: '/buku',
+        url: '/barang',
         data: {},
         success: function (response) {
             let rows = response['daftarbuku'];
@@ -540,11 +575,14 @@ function tampil_user() {
                                 ${carouselHTML}
                             </a>
                             <div class="card-body">
-                                <h5 class="semibold">${judul}</h5>
+                                <h5 class="fw-semibold text-center text-truncate d-flex align-items-center justify-content-center"
+                                    style="min-height: 3rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
+                                ${judul}
+                                </h5>
                                 <h6>Stok : ${stok}</h6>
                                 <h5 class="regular py-2 harga">Rp.${harga.toLocaleString('id-ID')}</h5>
                             </div>
-                            <div class="d-flex justify-content-between" id="book-btn">
+                            <div class="d-flex justify-content-between px-2 pb-3" id="book-btn">
                                 <a onclick="favorite('${url}')">
                                     <i class="far fa-heart fa-2x" id="fav-${url}"></i>
                                 </a>
@@ -650,7 +688,10 @@ function showcart() {
                         <div class="card card-book">
                             <a href="/detail/${url}">${carouselHTML}</a>
                             <div class="card-body">
-                                <h5 class="semibold" id="judul-${i}">${judul}</h5>
+                                <h5 id="judul-${i}" class="fw-semibold text-center text-truncate d-flex align-items-center justify-content-center"
+                                    style="min-height: 3rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
+                                ${judul}
+                                </h5>
                                 <h6>Stok : ${stok}</h6>
                                 <p class="d-none" id="ori-${i}">${harga}</p>
                                 <h5 class="regular py-2 harga" id="harga-${i}">Rp.${hargaFormatted}</h5>
@@ -687,39 +728,6 @@ function showcart() {
     });
 }
 
-// function prepare_checkout() {
-//     let dataPesanan = [];
-
-//     $("[id^='harga-']").each(function (index) {
-//         let hargaText = $(this).text();
-//         let harga = Number(hargaText.replace(/\D/g, ''));  // Ambil angka saja
-//         let jumlah = Number($(`#jumlah-${index}`).text());
-//         let judul1 = $(`#judul-${index}`).text();
-
-//         // Validasi dasar
-//         if (jumlah > 0 && harga > 0) {
-//             dataPesanan.push({
-//                 judul: judul1,
-//                 jumlah: jumlah,
-//                 harga: harga
-//             });
-//         }
-//     });
-
-//     if (dataPesanan.length === 0) {
-//         Swal.fire({
-//             icon: 'error',
-//             title: 'Gagal!',
-//             text: 'Tidak ada item yang dipilih',
-//             confirmButtonColor: '#625f5f',
-//             confirmButtonText: 'OK'
-//         });
-//         return;
-//     }
-
-//     check_out(dataPesanan);
-// }
-
 function check_out(para) {
     let username = $.cookie('username');
     let dataPesanan = para;
@@ -735,20 +743,24 @@ function check_out(para) {
         success: function (response) {
             if (response.result === 'success') {
                 Swal.fire({
+                    toast: true,
+                    position: 'top-start',
                     icon: 'success',
-                    title: 'Berhasil!',
-                    text: response["msg"],
-                    confirmButtonColor: '#625f5f',
-                    confirmButtonText: 'OK'
+                    title: response["msg"],
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
                 });
                 showcart();
             } else {
                 Swal.fire({
+                    toast: true,
+                    position: 'top-start',
                     icon: 'error',
-                    title: 'Gagal!',
-                    text: 'Ada yang salah',
-                    confirmButtonColor: '#625f5f',
-                    confirmButtonText: 'OK'
+                    title: 'Ada yang salah',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
                 });
             }
         }
@@ -759,11 +771,13 @@ function plus(para1, para2, para3, stok) {
     let angka = Number($(para1).text());
     if (angka >= stok) {
         Swal.fire({
+            toast: true,
+            position: 'top-start',
             icon: 'warning',
             title: 'Melebihi Stok!',
-            text: 'Stok barang tidak ada lagi',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
         return;
     }
@@ -795,20 +809,24 @@ function minus(para1, para2, para3, para4) {
             success: function (response) {
                 if (response.result === 'success') {
                     Swal.fire({
+                        toast: true,
+                        position: 'top-start',
                         icon: 'info',
-                        title: 'Terhapus!',
-                        text: 'Terhapus dari keranjang',
-                        confirmButtonColor: '#625f5f',
-                        confirmButtonText: 'OK'
+                        title: 'Terhapus dari keranjang',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
                     });
                     showcart();
                 } else {
                     Swal.fire({
+                        toast: true,
+                        position: 'top-start',
                         icon: 'error',
-                        title: 'Gagal!',
-                        text: 'Ada yang salah',
-                        confirmButtonColor: '#625f5f',
-                        confirmButtonText: 'OK'
+                        title: 'Ada yang salah',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
                     });
                 }
             }
@@ -1029,11 +1047,13 @@ function editgambar() {
     let gambarList = $("#gambar-buku").prop("files");
     if (!gambarList) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan input gambar!',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan input gambar!',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
 
@@ -1051,11 +1071,13 @@ function editgambar() {
         processData: false,
         success: function (response) {
             Swal.fire({
-                icon: 'success',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-                title: 'Berhasil!',
-                text: response["msg"],
-                confirmButtonColor: '#625f5f',
-                confirmButtonText: 'OK'
+                toast: true,
+                position: 'top-start',
+                icon: 'success',
+                title: response["msg"],
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
             });
             edit();
         }
@@ -1088,11 +1110,13 @@ function editing() {
         processData: false,
         success: function (response) {
             Swal.fire({
-                icon: 'success',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-                title: 'Berhasil!',
-                text: response["msg"],
-                confirmButtonColor: '#625f5f',
-                confirmButtonText: 'OK'
+                toast: true,
+                position: 'top-start',
+                icon: 'success',
+                title: response["msg"],
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
             });
             window.location.reload();
         }
@@ -1188,11 +1212,14 @@ function showfav() {
                                 ${carouselHTML}
                             </a>
                             <div class="card-body">
-                                <h5 class="semibold">${judul}</h5>
+                                <h5 class="fw-semibold text-center text-truncate d-flex align-items-center justify-content-center"
+                                    style="min-height: 3rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
+                                ${judul}
+                                </h5>
                                 <h6>Stok : ${stok}</h6>
                                 <h5 class="regular py-2 harga">Rp.${parseInt(harga).toLocaleString('id-ID')}</h5>
                             </div>
-                            <div class="d-flex justify-content-between" id="book-btn">
+                            <div class="d-flex justify-content-between px-2 pb-3" id="book-btn">
                                 <a onclick="favorite('${url}')">
                                     <i class="fas fa-heart fa-2x" id="fav-${url}"></i>
                                 </a>
@@ -1213,7 +1240,7 @@ function showfav() {
 function tampil() {
     $.ajax({
         type: 'GET',
-        url: '/buku',
+        url: '/hanyabarang',
         data: {},
         success: function (response) {
             let rows = response['daftarbuku'];
@@ -1279,12 +1306,17 @@ function tampil() {
                             ${carouselHTML}
                         </a>
                         <div class="card-body mt-3">
-                            <h5 class="semibold">${judul}</h5>
+                            <h5 class="fw-semibold text-center text-truncate d-flex align-items-center justify-content-center"
+                                style="min-height: 3rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
+                            ${judul}
+                            </h5>
                             <h6>Stok : ${stok}</h6>
                             <h5 class="regular py-2 harga" id="harga">Rp.${harga.toLocaleString('id-ID')}</h5>
                         </div>
-                        <div class="justify-content-between">
+                        <div class="d-flex justify-content-between px-2 pb-3">
+                            <a onclick="kelogin()"><i class="far fa-heart fa-2x"></i></a>
                             <a href="/detail/${url}" class="btn semibold card-body-btn">Detail</a>
+                            <a onclick="kelogin()"><i class="fas fa-cart-plus fa-2x"></i></a>
                         </div>
                     </div>
                 </div>`;
@@ -1295,6 +1327,9 @@ function tampil() {
     });
 }
 
+function kelogin() {
+    window.location.replace("/login");
+}
 
 function update_profile() {
     let file = $("#profile-user")[0].files[0];
@@ -1305,7 +1340,15 @@ function update_profile() {
     // let face_base64 = faceCanvas ? faceCanvas.toDataURL("image/jpeg") : null;
 
     if (!email || !nomor || !alamat) {
-        return Swal.fire({ icon: 'warning', title: 'Warning!', text: 'Lengkapi semua data.' });
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Lengkapi semua data.',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
     }
 
     let form_data = new FormData();
@@ -1324,76 +1367,96 @@ function update_profile() {
         processData: false,
         success: function (response) {
             if (response.result === "success") {
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: response.msg });
+                Swal.fire({
+                    toast: true,
+                    position: 'top-start',
+                    icon: 'success',
+                    title: response.msg,
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
                 window.location.reload();
             }
         },
     });
 }
 
-
 // Page Regis Admin
 function masukadmin() {
     let username = $('#inputUsername').val();
     if (!username) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan isi username anda',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi username anda',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
+
     let password = $('#inputPassword').val();
     if (!password) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan isi password anda',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi password anda',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
+
     let email = $('#inputEmail').val();
     if (!email) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan isi email',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi email',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
+
     let nomor = $('#inputNomor').val();
     if (!nomor) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan isi nomor handphone',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi nomor handphone',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
 
     let helpId = $("#helpId");
-    if (helpId.hasClass("fa-user")) {
-        Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan check id terlebih dahulu',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+    if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-user")) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan cek ID terlebih dahulu',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
-        return;
-    } else if (helpId.hasClass("fa-times")) {
-        Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Cek kembali id anda',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+    } else if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-xmark")) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Username tidak tersedia. Gunakan ID lain.',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
-        return;
     }
 
     $.ajax({
@@ -1407,11 +1470,13 @@ function masukadmin() {
         },
         success: function (response) {
             Swal.fire({
-                icon: 'success',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-                title: 'Berhasil!',
-                text: 'Kamu telah mendaftar sebagai Admin, terima kasih',
-                confirmButtonColor: '#625f5f',
-                confirmButtonText: 'OK'
+                toast: true,
+                position: 'top-start',
+                icon: 'success',
+                title: 'Kamu telah mendaftar sebagai Admin, terima kasih',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
             });
             window.location.replace("/login");
         }
@@ -1425,12 +1490,19 @@ function profile() {
     let nohp = user_list['nohp'];
     let alamat = user_list['alamat'];
     let profile = user_list['profile_default'];
+    let verifikasi = user_list['verifikasi_wajah']; // ← tambahkan ini
+
+    let verifikasiWajahHTML = '';
+    if (verifikasi) {
+        verifikasiWajahHTML = `<span class="text-success fw-bold">✅ Wajah sudah terverifikasi</span>`;
+    } else {
+        verifikasiWajahHTML = `<button id="btn-verifikasi-wajah" onclick="openFaceModal()" class="btn btn-secondary">📷 Verifikasi Wajah</button>`;
+    }
 
     let temp_html = `
     <div class="col-4 photo">
         <h2 class="bold mt-3 ms-1">FOTO PROFIL</h2>
-        <img src="/static/${profile}" class="img-thumbnail gambar mt-3"
-            alt="Profile">
+        <img src="/static/${profile}" class="img-thumbnail gambar mt-3" alt="Profile">
         <div class="custom-file-input ms-1 mt-4 mb-4 bold">
             <label for="profile-user">Choose File</label>
             <input type="file" id="profile-user" name="profile-user">
@@ -1456,7 +1528,7 @@ function profile() {
             <textarea class="form-control" id="inputAlamat" rows="2">${alamat}</textarea>
         </div>
         <div class="mb-2">
-            <button onclick="openFaceModal()" class="btn btn-secondary">Verifikasi Wajah</button>
+            ${verifikasiWajahHTML}
         </div>
         <div class="text-center">
             <button type="button" onclick="update_profile()" class="btn mt-3 bold btn-info-save">SAVE</button>
@@ -1466,8 +1538,10 @@ function profile() {
         <button type="button" class="btn btn-lg text-center bold btn-logout" onclick="sign_out()">Log Out</button>
     </div>
     `;
-    $('#editprofile').append(temp_html);
+
+    $('#editprofile').empty().append(temp_html); // pastikan bersihkan sebelum append
 }
+
 
 
 // Page Regis User
@@ -1475,50 +1549,62 @@ function masuk() {
     let username = $('#inputUsername').val();
     if (!username) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan isi username anda',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi username anda',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
+
     let password = $('#inputPassword').val();
     if (!password) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan isi password anda',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi password anda',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
+
     let email = $('#inputEmail').val();
     if (!email) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan isi email anda',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi email anda',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
 
     let helpId = $("#helpId");
-    if (helpId.hasClass("fa-user")) {
+    if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-user")) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan check id anda terlebih dahulu',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan cek ID anda terlebih dahulu',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
-    } else if (helpId.hasClass("fa-times")) {
+    } else if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-xmark")) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Cek kembali id anda..',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Cek kembali ID anda..',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
 
@@ -1532,11 +1618,13 @@ function masuk() {
         },
         success: function (response) {
             Swal.fire({
-                icon: 'success',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-                title: 'Berhasil!',
-                text: 'Kamu telah mendaftar sebagai User, terima kasih..',
-                confirmButtonColor: '#625f5f',
-                confirmButtonText: 'OK'
+                toast: true,
+                position: 'top-start',
+                icon: 'success',
+                title: 'Kamu telah mendaftar sebagai User, terima kasih..',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
             });
             window.location.replace("/login");
         }
@@ -1565,61 +1653,73 @@ function postbook() {
     let judul = $('#judul').val();
     if (!judul) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan isi nama barang',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi nama barang',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
     let deskripsi = $('#deskripsi').val();
     if (!deskripsi) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan isi deskripsi barang',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi deskripsi barang',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
     let harga = $('#harga').val();
     if (!harga) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan isi harga barang',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi harga barang',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
     let stok = $('#stok').val();
     if (!stok) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan isi stok barang',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi stok barang',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
     let kategori = $('#kategori').val();
     if (!kategori) {
         return Swal.fire({
-            icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-            title: 'Warning!',
-            text: 'Silahkan isi kategori barang',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi kategori barang',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
     let gambarList = $("#gambar-buku").prop("files");
     if (gambarList.length === 0) {
         return Swal.fire({
+            toast: true,
+            position: 'top-start',
             icon: 'warning',
-            title: 'Warning!',
-            text: 'Silahkan input gambar barang',
-            confirmButtonColor: '#625f5f',
-            confirmButtonText: 'OK'
+            title: 'Silahkan input gambar barang',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
         });
     }
 
@@ -1649,11 +1749,13 @@ function postbook() {
         processData: false,
         success: function (response) {
             Swal.fire({
+                toast: true,
+                position: 'top-start',
                 icon: 'success',
-                title: 'Berhasil!',
-                text: response["msg"],
-                confirmButtonColor: '#625f5f',
-                confirmButtonText: 'OK'
+                title: response["msg"],
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
             });
             window.location.href = '/adminpage';
         }
@@ -1671,11 +1773,13 @@ function check_judul_t() {
         success: function (response) {
             if (response["exists"]) {
                 Swal.fire({
-                    icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-                    title: 'Warning!',
-                    text: 'Judul sudah digunakan',
-                    confirmButtonColor: '#625f5f',
-                    confirmButtonText: 'OK'
+                    toast: true,
+                    position: 'top-start',
+                    icon: 'warning',
+                    title: 'Judul sudah digunakan',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
                 });
             } else {
                 postbook();
@@ -1700,11 +1804,13 @@ function check_judul_e(para) {
             success: function (response) {
                 if (response["exists"]) {
                     Swal.fire({
-                        icon: 'warning',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
-                        title: 'Warning!',
-                        text: 'Judul sudah digunakan',
-                        confirmButtonColor: '#625f5f',
-                        confirmButtonText: 'OK'
+                        toast: true,
+                        position: 'top-start',
+                        icon: 'warning',
+                        title: 'Judul sudah digunakan',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
                     });
                 } else {
                     editing();
@@ -1746,16 +1852,15 @@ function formatTanggal(datetimeStr) {
     return `${day} ${month} ${year} | ${hours}:${minutes}:${seconds}`;
 }
 
-
 function showorder() {
     $.ajax({
         type: 'GET',
         url: '/showorder',
         success: function (response) {
-            let rows = response['daftarorder'];
+            let rows = response['daftarorderan'];
             if (!rows || rows.length === 0) return;
 
-            $('#showoderan').empty(); // Bersihkan kontainer
+            $('#showoderan').empty();
 
             let groupedOrders = {};
             for (let item of rows) {
@@ -1775,6 +1880,7 @@ function showorder() {
                 let totalSemua = 0;
                 let jumlahSemua = 0;
                 let status = group[0].status.toLowerCase();
+                let statusPembatalan = group[0].status_pembatalan;
 
                 let itemHTML = group.map((item, idx) => {
                     let jumlah = parseInt(item.jumlah);
@@ -1804,12 +1910,8 @@ function showorder() {
                         <div class="row g-4 align-items-center py-3 border-bottom order-group" data-orderid="${id}">
                             <div class="col-md-4">
                                 <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
-                                    <div class="carousel-indicators">
-                                        ${indicators}
-                                    </div>
-                                    <div class="carousel-inner rounded-3">
-                                        ${inner}
-                                    </div>
+                                    <div class="carousel-indicators">${indicators}</div>
+                                    <div class="carousel-inner rounded-3">${inner}</div>
                                     <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
                                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                                         <span class="visually-hidden">Previous</span>
@@ -1833,7 +1935,7 @@ function showorder() {
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <strong>Status:</strong>
-                                        <span class="${item.status.toLowerCase() === 'belum bayar' ? 'text-danger' : 'text-success'}">${item.status}</span>
+                                        <span class="${status === 'belum bayar' ? 'text-danger' : 'text-success'}">${item.status}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -1841,23 +1943,37 @@ function showorder() {
                     `;
                 }).join('');
 
+                // Tombol Pembatalan
+                let tombolPembatalan = '';
+                if (status !== 'belum bayar') {
+                    if (statusPembatalan === 'diajukan') {
+                        tombolPembatalan = `
+                            <button id="btn-batal-${id}" class="btn btn-warning" type="button" onclick="batalkanPermintaanPembatalan('${id}')">🔁 Batalkan Pembatalan</button>
+                        `;
+                    } else {
+                        tombolPembatalan = `
+                            <button id="btn-batal-${id}" class="btn btn-outline-warning" type="button" onclick="batalkanPesanan('${id}')">❌ Batalkan Pesanan</button>
+                        `;
+                    }
+                }
+
+                // Tombol Aksi
                 let tombolAksi = '';
                 if (status === 'belum bayar') {
                     tombolAksi = `
-                    <div class="d-flex justify-content-center gap-2 mt-3">
-                        <button class="btn btn-outline-danger" type="button" onclick="verifikasiSebelumBayar('${id}', ${jumlahSemua}, ${totalSemua}, '${waktu}')">Bayar</button>
-                        <button class="btn btn-outline-secondary" type="button" onclick="hapusPesanan('${id}')">🗑️ Hapus Pesanan</button>
-                    </div>
-                `;
+                        <div class="d-flex justify-content-center gap-2 mt-3">
+                            <button class="btn btn-outline-danger" type="button" onclick="verifikasiSebelumBayar('${id}', ${jumlahSemua}, ${totalSemua}, '${waktu}')">Bayar</button>
+                            <button class="btn btn-outline-secondary" type="button" onclick="hapusPesanan('${id}')">🗑️ Hapus Pesanan</button>
+                        </div>
+                    `;
                 } else {
                     tombolAksi = `
-                    <div class="d-flex justify-content-center gap-2 mt-3">
-                        <button class="btn btn-outline-success" type="button" onclick="chatPenjual('${id}')">💬 Chat Penjual</button>
-                        <button class="btn btn-outline-warning" type="button" onclick="batalkanPesanan('${id}')">❌ Batalkan Pesanan</button>
-                    </div>
-                `;
+                        <div class="d-flex justify-content-center gap-2 mt-3">
+                            <button class="btn btn-outline-success" type="button" onclick="chatPenjual('${id}')">💬 Chat Penjual</button>
+                            ${tombolPembatalan}
+                        </div>
+                    `;
                 }
-
 
                 let temp_html = `
                     <div class="card shadow-lg p-4 rounded-4 mb-4" id="order-card-${id}">
@@ -1873,13 +1989,14 @@ function showorder() {
                 `;
 
                 $('#showoderan').append(temp_html);
+
                 if (status === 'belum bayar') {
                     startCountdown(id, waktu);
                 }
             }
         },
         error: function () {
-            alert("Gagal mengambil data pesanan.");
+            Swal.fire("Error", "Gagal mengambil data pesanan dari server", "error");
         }
     });
 }
@@ -1888,63 +2005,165 @@ function chatPenjual(orderid) {
     openChat(orderid); // Panggil fungsi buka popup chat
 }
 
-let currentOrderId = '';
+function formatTime(timestampStr) {
+    const [datePart, timePart] = timestampStr.split(" ");
+    if (!datePart || !timePart) return timestampStr;
 
-function openChat(orderid) {
-    currentOrderId = orderid;
-    document.getElementById('chatOrderId').innerText = `Order ID: ${orderid}`;
-    $('#liveChatModal').modal('show');
-    loadChat();
-}
+    const [year, month, day] = datePart.split("-");
+    const [hour, minute] = timePart.split(":");
 
-async function loadChat() {
-    if (!currentOrderId) return;
+    const msgDate = new Date(`${year}-${month}-${day}T${hour}:${minute}`);
+    const now = new Date();
 
-    const res = await fetch(`/getchat?orderid=${currentOrderId}`);
-    const data = await res.json();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const msgDay = new Date(msgDate.getFullYear(), msgDate.getMonth(), msgDate.getDate());
 
-    if (data.result === 'success') {
-        const chatBox = document.getElementById("chatBox");
-        chatBox.innerHTML = '';
+    const diffTime = msgDay.getTime() - today.getTime();
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
-        data.chat.forEach(c => {
-            const roleClass = c.role === 'admin' ? 'admin' : 'user';
-
-            chatBox.innerHTML += `
-                <div class="chat-message ${roleClass}">
-                    <div class="sender-name" style="font-size: 0.75rem; color: #555;"><b>${c.sender}</b></div>
-                    <div class="bubble">${c.message}</div>
-                    <div class="timestamp">${formatTime(c.timestamp)}</div>
-                </div>`;
-        });
-
-        chatBox.scrollTop = chatBox.scrollHeight;
+    if (diffDays === 0) {
+        // Hari ini → cuma HH:MM
+        return `${hour}:${minute}`;
+    } else if (diffDays === -1) {
+        // Kemarin → Kemarin, HH:MM
+        return `Kemarin, ${hour}:${minute}`;
+    } else {
+        // Tanggal lain → DD/MM/YYYY, HH:MM
+        return `${day}/${month}/${year}, ${hour}:${minute}`;
     }
 }
 
-function formatTime(isoString) {
-    const date = new Date(isoString);
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+function getCookie(name) {
+    let cookieArr = document.cookie.split(";");
+    for (let i = 0; i < cookieArr.length; i++) {
+        let cookiePair = cookieArr[i].split("=");
+        if (name == cookiePair[0].trim()) {
+            return decodeURIComponent(cookiePair[1]);
+        }
+    }
+    return null;
 }
 
-async function sendMessage() {
-    const pesan = document.getElementById("chatMessage").value.trim();
-    if (!pesan || !currentOrderId) return;
+setInterval(loadChat, 5000);
 
-    const res = await fetch('/sendchat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderid: currentOrderId, message: pesan })
+
+function batalkanPesanan(id) {
+    let username = $.cookie("username");
+    Swal.fire({
+        title: "Ajukan Pembatalan?",
+        text: "Apakah Anda yakin ingin mengajukan pembatalan pesanan ini?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Ya, ajukan!",
+        cancelButtonText: "Batal"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: "POST",
+                url: "/ajukan-pembatalan",
+                data: {
+                    id_give: id,
+                    username_give: username
+                },
+                success: function (response) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-start',
+                        icon: 'info',
+                        title: response["msg"],
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    showorder();
+                },
+                error: function () {
+                    alert("Gagal mengajukan pembatalan pesanan.");
+                }
+            });
+        }
     });
-
-    const data = await res.json();
-    if (data.result === 'success') {
-        document.getElementById("chatMessage").value = '';
-        loadChat();
-    }
 }
 
-setInterval(loadChat, 5000); // Refresh otomatis setiap 5 detik
+function batalkanPermintaanPembatalan(id) {
+    Swal.fire({
+        title: "Batalkan permintaan pembatalan?",
+        text: "Yakin ingin membatalkan permintaan pembatalan untuk pesanan ini?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Ya, batalkan",
+        cancelButtonText: "Tidak"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: "POST",
+                url: "/batal-pembatalan",  // Pastikan route ini ada di Flask
+                data: { order_id: id },
+                success: function (res) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-start',
+                        icon: 'success',
+                        title: res.msg,
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    showorder(); // refresh tampilan
+                },
+                error: function () {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-start',
+                        icon: 'error',
+                        title: 'Tidak bisa membatalkan permintaan.',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                }
+            });
+        }
+    });
+}
+
+function testpembayaran(orderid, jumlah, total, tanggal) {
+    Swal.fire({
+        title: 'Konfirmasi Pembayaran',
+        html: `Yakin ingin mengonfirmasi pembayaran untuk Order ID <b>${orderid}</b>?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Bayar',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: 'POST',
+                url: '/bayar-test',
+                data: {
+                    orderid_give: orderid,
+                    jumlah_give: jumlah,
+                    total_give: total,
+                    tanggal_give: tanggal
+                },
+                success: function (res) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: res.msg || 'Pembayaran berhasil',
+                        toast: true,
+                        position: 'top-end',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    showorder();  // Refresh tampilan order jika perlu
+                },
+                error: function () {
+                    Swal.fire('Error', 'Gagal memproses pembayaran', 'error');
+                }
+            });
+        }
+    });
+}
 
 
 function pembayaran(orderid, jumlah, total, tanggal) {
@@ -2053,10 +2272,13 @@ function hapusPesanan(orderId) {
                 data: { order_id: orderId },
                 success: function (response) {
                     Swal.fire({
+                        toast: true,
+                        position: 'top-start',
                         icon: 'success',
-                        title: 'Berhasil!',
-                        text: response.msg || 'Pesanan berhasil dihapus.',
-                        confirmButtonColor: '#3085d6'
+                        title: response.msg || 'Pesanan berhasil dihapus.',
+                        showConfirmButton: false,
+                        timer: 1000,
+                        timerProgressBar: true
                     }).then(() => {
                         location.reload(); // reload halaman setelah hapus
                     });
@@ -2068,7 +2290,228 @@ function hapusPesanan(orderId) {
                         text: 'Gagal menghapus pesanan. Silakan coba lagi.',
                         confirmButtonColor: '#d33'
                     });
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-start',
+                        icon: 'error',
+                        title: 'Gagal menghapus pesanan. Silakan coba lagi.',
+                        showConfirmButton: false,
+                        timer: 1000,
+                        timerProgressBar: true
+                    });
                 }
+            });
+        }
+    });
+}
+
+function showorderadmin() {
+    $.ajax({
+        type: 'GET',
+        url: '/dbadmin',
+        success: function (response) {
+            let rows = response['daftarorder'];
+            if (!rows || rows.length === 0) return;
+
+            $('#showoderanadmin').empty();
+
+            let groupedOrders = {};
+            for (let item of rows) {
+                let key = item['order_id'] + "_" + item['tanggal'];
+                groupedOrders[key] = groupedOrders[key] || [];
+                groupedOrders[key].push(item);
+            }
+
+            let sortedGroups = Object.entries(groupedOrders).sort((a, b) => {
+                let dateA = new Date(a[1][0].tanggal);
+                let dateB = new Date(b[1][0].tanggal);
+                return dateB - dateA;
+            }).reverse();
+
+            for (let [key, group] of sortedGroups) {
+                let { order_id: id, tanggal: waktu } = group[0];
+                let totalSemua = 0;
+                let jumlahSemua = 0;
+                let status = group[0].status.toLowerCase();
+                let statusPembatalan = group[0].status_pembatalan;
+                let username = group[0].username;
+
+                let itemHTML = group.map((item, idx) => {
+                    let jumlah = parseInt(item.jumlah);
+                    let harga = parseInt(item.harga);
+
+                    totalSemua += harga;
+                    jumlahSemua += jumlah;
+
+                    let carouselId = `carousel-${id}-${idx}`;
+                    let covers = item.AllCover || [];
+                    let indicators = '';
+                    let inner = '';
+
+                    for (let i = 0; i < covers.length; i++) {
+                        let activeClass = i === 0 ? 'active' : '';
+                        indicators += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${i + 1}"></button>`;
+                        inner += `<div class="carousel-item ${activeClass}"><img src="/static/${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
+                    }
+
+                    return `
+                        <div class="row g-4 align-items-center py-3 border-bottom order-group" data-orderid="${id}">
+                            <div class="col-md-4">
+                                <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-indicators">${indicators}</div>
+                                    <div class="carousel-inner rounded-3">${inner}</div>
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <h4 class="fw-bold text-info">${item.judul}</h4>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <strong>Jumlah:</strong>
+                                        <span class="item-jumlah">${item.jumlah}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <strong>Total:</strong>
+                                        <span class="item-harga">Rp.${item.harga.toLocaleString('id-ID')}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <strong>Status:</strong>
+                                        <span class="${status === 'belum bayar' ? 'text-danger' : 'text-success'}">${item.status}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Tombol Aksi Admin
+                let tombolAksi = '';
+                if (status === 'sudah bayar') {
+                    tombolAksi = `
+                        <div class="d-flex justify-content-center gap-2 mt-3">
+                            <button class="btn btn-outline-success" onclick="kirimPesanan('${id}', '${username}')">📦 Kirim Pesanan</button>
+                            <button class="btn btn-outline-danger" onclick="konfirmasiPembatalan('${id}', '${username}')">❌ Konfirmasi Pembatalan</button>
+                            <button class="btn btn-outline-info" onclick="chatUser('${id}','${username}')">💬 Chat User</button>
+                        </div>
+                    `;
+                } else {
+                    tombolAksi = `
+                        <div class="d-flex justify-content-center mt-3">
+                            <button class="btn btn-outline-info" onclick="chatUser('${id}', '${username}')">💬 Chat User</button>
+                        </div>
+                    `;
+                }
+
+                let temp_html = `
+                    <div class="card shadow-lg p-4 rounded-4 mb-4" id="order-card-${id}">
+                        <h4 class="mb-3">${formatTanggal(waktu)} - <span class="text-primary">${username}</span></h4>
+                        ${itemHTML}
+                        ${tombolAksi}
+                    </div>
+                `;
+
+                $('#showoderanadmin').append(temp_html);
+            }
+        },
+        error: function () {
+            Swal.fire("Error", "Gagal mengambil data order dari server", "error");
+        }
+    });
+}
+
+function lihatUser() {
+    $.ajax({
+        type: 'GET',
+        url: '/dbadmin',
+        success: function (res) {
+            const users = res.daftaruser;
+            const tbody = $('#userTableBody');
+            tbody.empty();
+
+            users.forEach(user => {
+                const foto = user.profile_default ? `/static/${user.profile_default}` : '/static/default.png';
+                const email = user.email || '-';
+                const nohp = user.nohp || '-';
+                const alamat = user.alamat || '-';
+
+                const row = `
+            <tr class="text-center">
+              <td><img src="${foto}" alt="foto-${user.username}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;"></td>
+              <td>${user.username}</td>
+              <td>${email}</td>
+              <td>${nohp}</td>
+              <td>${alamat}</td>
+              <td>
+                <button class="btn btn-danger btn-sm" onclick="hapusUser('${user.username}')">Hapus</button>
+                <button class="btn btn-warning btn-sm" onclick="resetPassword('${user.username}')">Reset Password</button>
+              </td>
+            </tr>`;
+                tbody.append(row);
+            });
+        },
+        error: function () {
+            alert('Gagal mengambil data user');
+        }
+    });
+}
+
+function hapusUser(username) {
+    Swal.fire({
+        title: `Yakin ingin menghapus user "${username}"?`,
+        text: "Tindakan ini tidak dapat dibatalkan.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Hapus",
+        cancelButtonText: "Batal"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post('/hapus-user', { username_give: username }, function (res) {
+                Swal.fire({
+                    icon: 'success',
+                    title: res.msg,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+                $('#userModal').modal('hide');
+            });
+        }
+    });
+}
+
+function resetPassword(username) {
+    Swal.fire({
+        title: `Reset password user "${username}"?`,
+        text: "Password akan diubah menjadi '12345678'.",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#0d6efd",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Reset",
+        cancelButtonText: "Batal"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post('/reset-password', { username_give: username }, function (res) {
+                Swal.fire({
+                    icon: 'success',
+                    title: res.msg,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
             });
         }
     });

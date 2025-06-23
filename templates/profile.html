@@ -234,6 +234,14 @@
                                 spinner.style.display = 'none';
                                 Swal.fire("Berhasil", "Wajah berhasil direkam!", "success");
                                 closeFaceModal();
+                                // Ganti tombol jadi teks
+                                const btnVerifikasi = document.getElementById("btn-verifikasi-wajah");
+                                if (btnVerifikasi) {
+                                    const span = document.createElement("span");
+                                    span.className = "text-success fw-bold";
+                                    span.innerText = "✅ Wajah sudah terverifikasi";
+                                    btnVerifikasi.replaceWith(span);
+                                }
                             }
                         } else {
                             Swal.fire("Gagal Simpan", response.msg, "error");

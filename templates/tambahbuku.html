@@ -41,6 +41,32 @@
             check_admin();
         });
     </script>
+    <style>
+        .preview-img-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 5px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            width: 100px;
+            height: 100px;
+        }
+
+        .preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Hapus tombol silang, tidak dibutuhkan */
+        .remove-img-btn {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
@@ -97,11 +123,12 @@
                         <option value="Lainnya">Lainnya</option>
                     </select>
                 </div>
-                <div class="form-group d-flex ms-4">
-                    <label for="gambar-buku">Gambar Barang:</label>
-                    <div class="custom-file-input">
-                        <label for="gambar-buku">Choose Files</label>
-                        <input type="file" id="gambar-buku" name="gambar-buku" multiple accept="image/*">
+                <div class="form-group row mb-3 ms-4">
+                    <label for="gambar-buku" class="col-form-label fw-semibold col-sm-3">Gambar Barang:</label>
+                    <div class="col-sm-9">
+                        <input class="form-control" type="file" id="gambar-buku" name="gambar-buku" multiple
+                            accept="image/*">
+                        <div id="previewContainer" class="d-flex flex-wrap gap-3 mt-3"></div>
                     </div>
                 </div>
                 <div class="d-flex justify-content-center my-4">
@@ -132,6 +159,35 @@
     </div>
 
     <script defer src="{{ url_for('static', filename='js/myjs.js') }}"></script>
+
+    <script>
+        let selectedFiles = [];
+
+        document.getElementById("gambar-buku").addEventListener("change", function () {
+            const container = document.getElementById("previewContainer");
+            container.innerHTML = "";
+            selectedFiles = Array.from(this.files);
+
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "preview-img-wrapper";
+                    wrapper.setAttribute("data-index", index);
+
+                    const img = document.createElement("img");
+                    img.src = e.target.result;
+                    img.className = "preview-img";
+
+                    // Tidak ada tombol silang di sini
+                    wrapper.appendChild(img);
+                    container.appendChild(wrapper);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
+
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
