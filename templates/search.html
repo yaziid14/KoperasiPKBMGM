@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required Meta Tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='icon.png') }}" type="image/x-icon" />
+
+    <!-- Bootstrap CSS (v5.3.3) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"
+        integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+
+    <!-- jQuery Cookie -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"
+        integrity="sha512-3j3VU6WC5rPQB4Ld1jnLV7Kd5xr+cq9avvhwqzbH/taCRNURoeEpoPBK9pDyeukwSxwRPJ8fDgvYXd6SkaZ2TA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- Bootstrap JS Bundle (v5.3.3) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+    <title>KoperasiGM - Pencarian</title>
+    <script>
+        $(document).ready(function () {
+            no_login();
+            rolesearch();
+        });
+    </script>
+</head>
+
+<body>
+    <nav class="navbar fixed-top navbar-expand bg-nav">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#" onclick="check_role()">
+                <img src="{{ url_for('static', filename='logo2.jpg') }}" alt="Logo" height="55" width="200">
+            </a>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
+                <div class="navbar-nav">
+                    <form class="d-flex">
+                        <div class="form-control me-4 form-nav">
+                            <input class="inp-nav" placeholder="Mencari Sesuatu?" aria-label="Search" id="cari">
+                            <a onclick="cari()"><i class="fa fa-search fa-lg icon-src-nav" aria-hidden="true"></i></a>
+                        </div>
+                    </form>
+                </div>
+                <div id="navadmin">
+                    <div class="d-flex">
+                        <a class="nav-link active semibold me-3" style="color: white;" aria-current="page"
+                            href="/tambah">Input
+                            Item</a>
+                        <a class="nav-link semibold" style="color: wheat; cursor: pointer;"
+                            onclick="sign_out()">Keluar</a>
+                    </div>
+                </div>
+                <div id="navuser">
+                    <a href="/favorite"><i class="fa fa-heart fa-2x me-4" aria-hidden="true"
+                            style="color: white;"></i></a>
+                    <a href="/cart"><i class="fa fa-shopping-cart fa-2x me-4" aria-hidden="true"
+                            style="color: white;"></i></a>
+                    <div class="dropdown">
+                        <button onclick="toggleDropdown()" class="profile-btn">
+                            <i class="fa fa-user fa-2x me-2" aria-hidden="true" style="color: bisque;"></i>
+                        </button>
+                        <div id="profileDropdown" class="dropdown-content">
+                            <a href="/profile">Profil Saya</a>
+                            <a href="/orders">Pesanan Saya</a>
+                            <a href="#" onclick="sign_out()">Keluar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container dash">
+        <h3 class="extrabold">Hasil pencarian: "{{ kata }}"</h3>
+        <hr>
+    </div>
+
+    <div class="container" id="cardadmin">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4 my-5" id="card-book">
+            {% if hasil %}
+            {% for search in hasil %}
+            {% set url = search['URL'] %}
+            {% set cover = search['Cover'] %}
+            {% set judul = search['JudulBuku'] %}
+            {% set harga = search['Harga'] %}
+            <div class="col">
+                <div class="card card-book h-100">
+                    <a href="/detail/{{ url }}"><img src="/static/{{ cover }}" class="card-img-top card-book-img"
+                            alt="Book"></a>
+                    <div class="card-body">
+                        <h5 class="semibold" id="{{ url }}">{{ judul }}</h5>
+                    </div>
+                    <h5 class="regular py-2" style="color: #004AD8;">{{ harga }}</h5>
+                    <div class="d-flex justify-content-center">
+                        <a href="/edit/{{ url }}" class="btn semibold card-admin-btn"
+                            style="background-color: #0A868C;">Edit</a>
+                        <button onclick="deleteadm('#{{ url }}')" class="btn semibold card-admin-btn ms-3"
+                            style="background-color: #D60000;" id="delete">Delete</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="" id="nothing" style="width: 100%;">
+                <h1 class="text-center">Nama barang tidak ditemukan</h1>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container" id="carduser">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4 my-5" id="card-book">
+            {% if hasil %}
+            {% for search in hasil %}
+            {% set url = search['URL'] %}
+            {% set covers = search['AllCover'] if 'AllCover' in search else [search['Cover']] %}
+            {% set judul = search['JudulBuku'] %}
+            {% set harga = search['Harga'] %}
+            {% set stok = search['Stok'] %}
+            {% set is_fav = url in daftarfavorite %}
+            {% set is_cart = url in daftarkeranjang %}
+
+            <div class="col">
+                <div class="card card-book h-100">
+                    <a href="/detail/{{ url }}">
+                        {% if covers | length > 1 %}
+                        <div id="carousel-{{ loop.index }}" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for c in covers %}
+                                <div class="carousel-item {% if loop.index == 1 %}active{% endif %}">
+                                    <img src="/static/{{ c }}" class="d-block w-100 card-book-img1"
+                                        alt="cover-{{ loop.index0 }}">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button class="carousel-control-prev" type="button"
+                                data-bs-target="#carousel-{{ loop.index }}" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button"
+                                data-bs-target="#carousel-{{ loop.index }}" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                        {% else %}
+                        <img src="/static/{{ covers[0] }}" class="d-block w-100 card-book-img1" alt="Book">
+                        {% endif %}
+                    </a>
+
+                    <div class="card-body">
+                        <h5 class="semibold">{{ judul }}</h5>
+                        <h6>Stok : {{ stok }}</h6>
+                        <h5 class="regular py-2 harga">{{ search['HargaFormat'] }}</h5>
+                    </div>
+
+                    <div class="d-flex justify-content-between px-2 pb-3">
+                        <!-- Favorite -->
+                        <a onclick="favorite('{{ url }}')">
+                            <i class="{% if is_fav %}fas{% else %}far{% endif %} fa-heart fa-2x" aria-hidden="true"
+                                id="fav-{{ url }}"></i>
+                        </a>
+
+                        <!-- Detail -->
+                        <a href="/detail/{{ url }}" class="btn semibold card-body-btn">Detail</a>
+
+                        <!-- Keranjang -->
+                        {% if stok|int > 0 %}
+                        <a onclick="keranjang('{{ url }}')">
+                            <i class="fas {% if is_cart %}fa-cart-arrow-down{% else %}fa-cart-plus{% endif %} fa-2x"
+                                aria-hidden="true" id="cart-{{ url }}"></i>
+                        </a>
+                        {% else %}
+                        <a>
+                            <i class="fas fa-cart-plus fa-2x text-muted" aria-hidden="true" id="cart-{{ url }}"
+                                title="Stok habis" style="pointer-events: none; opacity: 0.5;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div id="nothing" style="width: 100%;">
+                <h1 class="text-center">Nama Barang tidak ditemukan</h1>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <!-- Modal Konfirmasi Logout -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-semibold" id="logoutModalLabel">Konfirmasi Logout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    Apakah Anda yakin ingin keluar dari akun Anda?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-danger" onclick="confirm_logout()">Keluar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script defer src="{{ url_for('static', filename='js/myjs.js') }}"></script>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/TextPlugin.min.js"></script>
+    <script>
+        gsap.registerPlugin(TextPlugin);
+        gsap.from('.navbar', { duration: 1, y: '-100%', opacity: 0, ease: 'bounce' });
+    </script>
+
+
+</body>
+
+</html>
