@@ -34,10 +34,6 @@ MIDTRANS_CLIENT_KEY = os.getenv("MIDTRANS_CLIENT_KEY")
 # === Inisialisasi Flask ===
 app = Flask(__name__, instance_relative_config=True)
 
-# Buat folder instance dataset dan model saat app dijalankan
-os.makedirs(os.path.join(app.instance_path, 'dataset'), exist_ok=True)
-os.makedirs(os.path.join(app.instance_path, 'models'), exist_ok=True)
-
 # === MongoDB ===
 client = MongoClient(MONGODB_URI)
 db = client[DB_NAME]
