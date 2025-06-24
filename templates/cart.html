@@ -34,7 +34,7 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <!-- <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script> -->
 
 
     <title>KoperasiGM - Favorite</title>
@@ -44,13 +44,13 @@
             check_user();
             showcart();
             // Tunggu sampai model dimuat sebelum memulai deteksi
-            Promise.all([
-                faceapi.nets.tinyFaceDetector.loadFromUri('/static/models'),
-                faceapi.nets.faceRecognitionNet.loadFromUri('/static/models'),
-                faceapi.nets.faceLandmark68Net.loadFromUri('/static/models')
-            ]).then(() => {
-                console.log("✅ Model face-api.js berhasil dimuat");
-            });
+            // Promise.all([
+            //     faceapi.nets.tinyFaceDetector.loadFromUri('/static/models'),
+            //     faceapi.nets.faceRecognitionNet.loadFromUri('/static/models'),
+            //     faceapi.nets.faceLandmark68Net.loadFromUri('/static/models')
+            // ]).then(() => {
+            //     console.log("✅ Model face-api.js berhasil dimuat");
+            // });
         };
     </script>
 </head>
@@ -97,30 +97,27 @@
     </div>
 
     <!-- Modal Verifikasi Wajah (Ukuran Kecil) -->
-    <div id="faceModal" style="display: none;">
+    <!-- <div id="faceModal" style="display: none;">
         <div class="modal-content11 shadow"
             style="max-width: 400px; margin: 5% auto; border-radius: 12px; background: #fff;">
-            <!-- Header -->
             <div class="modal-header position-relative" style="padding: 10px 16px;">
                 <h5 class="w-100 text-center m-0">Verifikasi Wajah</h5>
                 <button type="button" class="btn-close position-absolute end-0 top-0 m-2"
                     onclick="closeFaceModal()"></button>
             </div>
 
-            <!-- Area Kamera -->
             <div class="face-area d-flex justify-content-center px-3 pt-2 pb-1">
                 <video id="video" autoplay playsinline
                     style="width: 100%; max-width: 100%; border-radius: 10px;"></video>
                 <canvas id="face-capture" style="display: none;"></canvas>
             </div>
 
-            <!-- Spinner + Progress -->
             <div class="modal-footer-custom text-center px-4 pb-3">
                 <div id="spinner" class="text-muted small mb-2" style="display: none;">Mendeteksi wajah...</div>
                 <progress id="progressBar" value="0" max="1" class="form-range w-100" style="height: 10px;"></progress>
             </div>
         </div>
-    </div>
+    </div> -->
 
 
     <!-- Modal Konfirmasi Logout -->
@@ -144,7 +141,7 @@
 
     <script defer src="{{ url_for('static', filename='js/myjs.js') }}"></script>
 
-    <script>
+    <!-- <script>
         let stream;
 
         async function ModalCheckOut() {
@@ -289,7 +286,7 @@
                 Swal.fire("Gagal", "Terjadi kesalahan saat memverifikasi wajah", "error");
             }
         }
-    </script>
+    </script> -->
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>

@@ -284,13 +284,15 @@ def dbadmin():
         {'username': user_receive}, {'_id': False}))
     cart_list = list(db.cart.find({'username': user_receive}, {'_id': False}))
     order_list = list(db.orderan.find({}, {'_id': False}))
+    pembatalan_list = list(db.pembatalan.find({}, {'_id': False}))
 
     return jsonify({
         'daftarbuku': book_list,
         'daftaruser': user_list,
         'daftarfavorite': favorite_list,
         'daftarkeranjang': cart_list,
-        'daftarorder': order_list
+        'daftarorder': order_list,
+        'daftarpembatalan': pembatalan_list
     })
 
 
@@ -727,6 +729,44 @@ def orderadmin():
     return render_template('orderadmin.html')
 
 
+@app.route('/konfirmasi_pembatalan', methods=['POST'])
+def konfirmasi_pembatalan():
+    data = request.get_json()
+    orderid = data.get('order_id')
+    username = data.get('username')
+
+    if not orderid or not username:
+        return jsonify({'result': 'error', 'message': 'Data tidak lengkap'})
+
+    # Hapus dari koleksi pembatalan
+    db.pembatalan.delete_many({'order_id': orderid})
+
+    # Update status di orderan
+    result = db.orderan.update_many(
+        {'order_id': orderid},
+        {'$set': {'status': 'Dibatalkan'}}
+    )
+
+    return jsonify({'result': 'success', 'updated': result.modified_count})
+
+
+@app.route('/kirim_pesanan', methods=['POST'])
+def kirim_pesanan():
+    data = request.get_json()
+    orderid = data.get('order_id')
+    username = data.get('username')
+
+    if not orderid or not username:
+        return jsonify({'result': 'error', 'message': 'Data tidak lengkap'})
+
+    result = db.orderan.update_many(
+        {'order_id': orderid},
+        {'$set': {'status': 'Terkirim'}}
+    )
+
+    return jsonify({'result': 'success', 'updated': result.modified_count})
+
+
 @app.route('/showorder')
 def showorder():
     user_receive = request.cookies.get("username")
@@ -769,6 +809,25 @@ def showorder():
         orders_list.append(order)
 
     return jsonify({'daftarorderan': orders_list, 'daftarorder': orders_list})
+
+
+@app.route('/pesanan-selesai', methods=['POST'])
+def pesanan_selesai():
+    data = request.get_json()
+    orderid = data.get('orderid')
+
+    if not orderid:
+        return jsonify({'result': 'error', 'message': 'Order ID tidak ditemukan'})
+
+    result = db.orderan.update_many(
+        {'order_id': orderid},
+        {'$set': {'status': 'Pesanan Selesai'}}
+    )
+
+    if result.modified_count > 0:
+        return jsonify({'result': 'success'})
+    else:
+        return jsonify({'result': 'error', 'message': 'Tidak ada data yang diubah'})
 
 
 @app.route('/hapus-pesanan', methods=['POST'])

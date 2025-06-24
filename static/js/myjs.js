@@ -416,15 +416,15 @@ function tampil_admin() {
                         <h3 class="semibold">Pengguna</h3>
                         <p class="count regular">
                             <b style="color: #004ad880;">${count1}</b>
-                            <a onclick="lihatUser()" data-bs-toggle="modal" data-bs-target="#userModal">Pengguna</a>
+                            <a href="#" onclick="lihatUser()" class="text-decoration-none text-dark fw-semibold" data-bs-toggle="modal" data-bs-target="#userModal">Pengguna</a>
                         </p>
                     </div>
-                    <i class="fa fa-user"></i>
+                    <i class="fa-solid fa-user"></i>
                 </div>
                 <div class="box box-bg2 my-2 mx-2">
                     <div class="info">
                         <h3 class="semibold">Transaksi</h3>
-                        <p class="count regular"><b style="color: #d8410080;">${count}</b> <a onclick="lihatOrder()">Orders</a></p>
+                        <p class="count regular"><b style="color: #d8410080;">${count}</b> <a href="#" onclick="lihatOrder()" class="text-decoration-none text-dark fw-semibold">Orders</a></p>
                     </div>
                     <i class="fa fa-shopping-cart"></i>
                 </div>`;
@@ -719,13 +719,39 @@ function showcart() {
             if (rows.length > 0) {
                 checkout_button = `
                     <div class="text-center mt-5">
-                        <button type="button" class="btn btn-lg bold btn-checkout" onclick="ModalCheckOut()">Check Out</button>
+                        <button type="button" class="btn btn-lg bold btn-checkout" onclick="sebelumco()">Check Out</button>
                     </div>`;
             }
 
             $('#keranjang1').html(grid_wrapper + checkout_button);
         }
     });
+}
+
+function sebelumco() {
+    let dataPesanan = [];
+    $("[id^='harga-']").each(function (index) {
+        let hargaText = $(this).text();
+        let harga = Number(hargaText.replace(/\D/g, ''));
+        let jumlah = Number($(`#jumlah-${index}`).text());
+        let judul1 = $(`#judul-${index}`).text().trim();
+
+        if (jumlah > 0 && harga > 0) {
+            dataPesanan.push({ judul: judul1, jumlah: jumlah, harga: harga });
+        }
+    });
+
+    if (dataPesanan.length === 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: 'Tidak ada item yang dipilih',
+            confirmButtonColor: '#625f5f',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    check_out(dataPesanan);
 }
 
 function check_out(para) {
@@ -1877,33 +1903,30 @@ function showorder() {
 
             for (let [key, group] of sortedGroups) {
                 let { order_id: id, tanggal: waktu } = group[0];
+                let status = group[0].status.toLowerCase();
+
+                if (status === 'pesanan selesai' || status === 'dibatalkan') {
+                    continue;
+                }
+
                 let totalSemua = 0;
                 let jumlahSemua = 0;
-                let status = group[0].status.toLowerCase();
                 let statusPembatalan = group[0].status_pembatalan;
 
                 let itemHTML = group.map((item, idx) => {
                     let jumlah = parseInt(item.jumlah);
                     let harga = parseInt(item.harga);
-
                     totalSemua += harga;
                     jumlahSemua += jumlah;
 
                     let carouselId = `carousel-${id}-${idx}`;
                     let covers = item.AllCover || [];
-                    let indicators = '';
-                    let inner = '';
+                    let indicators = '', inner = '';
 
                     for (let i = 0; i < covers.length; i++) {
                         let activeClass = i === 0 ? 'active' : '';
-                        indicators += `
-                            <button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${i + 1}"></button>
-                        `;
-                        inner += `
-                            <div class="carousel-item ${activeClass}">
-                                <img src="/static/${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}">
-                            </div>
-                        `;
+                        indicators += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${i + 1}"></button>`;
+                        inner += `<div class="carousel-item ${activeClass}"><img src="/static/${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
                     }
 
                     return `
@@ -1935,7 +1958,7 @@ function showorder() {
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <strong>Status:</strong>
-                                        <span class="${status === 'belum bayar' ? 'text-danger' : 'text-success'}">${item.status}</span>
+                                        <span class="${status === 'dibatalkan' ? 'text-danger' : 'text-success'}">${item.status}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -1945,16 +1968,14 @@ function showorder() {
 
                 // Tombol Pembatalan
                 let tombolPembatalan = '';
-                if (status !== 'belum bayar') {
+                if (status === 'sudah bayar') {
                     if (statusPembatalan === 'diajukan') {
-                        tombolPembatalan = `
-                            <button id="btn-batal-${id}" class="btn btn-warning" type="button" onclick="batalkanPermintaanPembatalan('${id}')">🔁 Batalkan Pembatalan</button>
-                        `;
+                        tombolPembatalan = `<button id="btn-batal-${id}" class="btn btn-warning" type="button" onclick="batalkanPermintaanPembatalan('${id}')">🔁 Batalkan Pembatalan</button>`;
                     } else {
-                        tombolPembatalan = `
-                            <button id="btn-batal-${id}" class="btn btn-outline-warning" type="button" onclick="batalkanPesanan('${id}')">❌ Batalkan Pesanan</button>
-                        `;
+                        tombolPembatalan = `<button id="btn-batal-${id}" class="btn btn-outline-warning" type="button" onclick="batalkanPesanan('${id}')">❌ Batalkan Pesanan</button>`;
                     }
+                } else if (status === 'terkirim') {
+                    tombolPembatalan = `<button class="btn btn-outline-success" onclick="pesananSelesai('${id}')">✅ Pesanan Selesai</button>`;
                 }
 
                 // Tombol Aksi
@@ -1976,7 +1997,7 @@ function showorder() {
                 }
 
                 let temp_html = `
-                    <div class="card shadow-lg p-4 rounded-4 mb-4" id="order-card-${id}">
+                    <div class="card shadow-lg p-4 rounded-4 mb-4 position-relative" id="order-card-${id}">
                         <h4 class="mb-3">${formatTanggal(waktu)}</h4>
                         ${itemHTML}
                         ${status === 'belum bayar' ? `
@@ -1997,6 +2018,38 @@ function showorder() {
         },
         error: function () {
             Swal.fire("Error", "Gagal mengambil data pesanan dari server", "error");
+        }
+    });
+}
+
+
+function pesananSelesai(orderid) {
+    Swal.fire({
+        title: "Konfirmasi",
+        text: "Apakah Anda yakin pesanan ini sudah selesai?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Ya, selesai",
+        cancelButtonText: "Batal"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/pesanan-selesai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderid: orderid })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.result === 'success') {
+                        Swal.fire("Sukses", "Status pesanan telah diperbarui.", "success");
+                        showorder(); // Refresh tampilan
+                    } else {
+                        Swal.fire("Gagal", data.message || "Terjadi kesalahan", "error");
+                    }
+                })
+                .catch(err => {
+                    Swal.fire("Error", "Gagal menghubungi server", "error");
+                });
         }
     });
 }
@@ -2313,6 +2366,9 @@ function showorderadmin() {
             let rows = response['daftarorder'];
             if (!rows || rows.length === 0) return;
 
+            let pembatalanList = response['daftarpembatalan'] || [];
+            let pembatalanSet = new Set(pembatalanList.map(p => p.order_id));
+
             $('#showoderanadmin').empty();
 
             let groupedOrders = {};
@@ -2333,7 +2389,6 @@ function showorderadmin() {
                 let totalSemua = 0;
                 let jumlahSemua = 0;
                 let status = group[0].status.toLowerCase();
-                let statusPembatalan = group[0].status_pembatalan;
                 let username = group[0].username;
 
                 let itemHTML = group.map((item, idx) => {
@@ -2383,7 +2438,7 @@ function showorderadmin() {
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <strong>Status:</strong>
-                                        <span class="${status === 'belum bayar' ? 'text-danger' : 'text-success'}">${item.status}</span>
+                                        <span class="${status === 'belum bayar' ? 'text-danger' : (status === 'dibatalkan' ? 'text-danger' : 'text-success')}">${item.status}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -2394,11 +2449,21 @@ function showorderadmin() {
                 // Tombol Aksi Admin
                 let tombolAksi = '';
                 if (status === 'sudah bayar') {
+                    let tombolList = [];
+
+                    if (!pembatalanSet.has(id)) {
+                        tombolList.push(`<button class="btn btn-outline-success" onclick="kirimPesanan('${id}', '${username}')">📦 Kirim Pesanan</button>`);
+                    }
+
+                    if (pembatalanSet.has(id)) {
+                        tombolList.push(`<button class="btn btn-outline-danger" onclick="konfirmasiPembatalan('${id}', '${username}')">❌ Konfirmasi Pembatalan</button>`);
+                    }
+
+                    tombolList.push(`<button class="btn btn-outline-info" onclick="chatUser('${id}', '${username}')">💬 Chat User</button>`);
+
                     tombolAksi = `
                         <div class="d-flex justify-content-center gap-2 mt-3">
-                            <button class="btn btn-outline-success" onclick="kirimPesanan('${id}', '${username}')">📦 Kirim Pesanan</button>
-                            <button class="btn btn-outline-danger" onclick="konfirmasiPembatalan('${id}', '${username}')">❌ Konfirmasi Pembatalan</button>
-                            <button class="btn btn-outline-info" onclick="chatUser('${id}','${username}')">💬 Chat User</button>
+                            ${tombolList.join('')}
                         </div>
                     `;
                 } else {
@@ -2409,8 +2474,19 @@ function showorderadmin() {
                     `;
                 }
 
+                // Label dibatalkan
+                let badgeDibatalkan = '';
+                if (status === 'dibatalkan') {
+                    badgeDibatalkan = `
+                        <div class="position-absolute top-0 end-0 mt-2 me-3">
+                            <span class="badge bg-danger">❌ DIBATALKAN</span>
+                        </div>
+                    `;
+                }
+
                 let temp_html = `
-                    <div class="card shadow-lg p-4 rounded-4 mb-4" id="order-card-${id}">
+                    <div class="card shadow-lg p-4 rounded-4 mb-4 position-relative" id="order-card-${id}">
+                        ${badgeDibatalkan}
                         <h4 class="mb-3">${formatTanggal(waktu)} - <span class="text-primary">${username}</span></h4>
                         ${itemHTML}
                         ${tombolAksi}
@@ -2513,6 +2589,298 @@ function resetPassword(username) {
                     timerProgressBar: true
                 });
             });
+        }
+    });
+}
+
+function konfirmasiPembatalan(orderId, username) {
+    Swal.fire({
+        title: 'Konfirmasi Pembatalan',
+        text: `Yakin ingin membatalkan pesanan ${orderId}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, batalkan',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/konfirmasi_pembatalan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ order_id: orderId, username: username })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.result === 'success') {
+                        Swal.fire('Dibatalkan', 'Pesanan telah dibatalkan.', 'success');
+                        showorderadmin(); // refresh daftar order
+                    } else {
+                        Swal.fire('Gagal', data.message || 'Terjadi kesalahan.', 'error');
+                    }
+                })
+                .catch(err => {
+                    Swal.fire('Error', 'Tidak dapat menghubungi server.', 'error');
+                    console.error(err);
+                });
+        }
+    });
+}
+
+function kirimPesanan(orderId, username) {
+    Swal.fire({
+        title: 'Kirim Pesanan?',
+        text: `Pastikan pesanan ${orderId} atas nama ${username} sudah dikirim.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, kirim',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/kirim_pesanan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ order_id: orderId, username: username })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.result === 'success') {
+                        Swal.fire('Terkirim', 'Status pesanan telah diubah menjadi Terkirim.', 'success');
+                        showorderadmin(); // Refresh tampilan
+                    } else {
+                        Swal.fire('Gagal', data.message || 'Gagal mengirim pesanan.', 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error', 'Terjadi kesalahan saat mengirim pesanan.', 'error');
+                    console.error(error);
+                });
+        }
+    });
+}
+
+function showorderDibatalkan() {
+    $.ajax({
+        type: 'GET',
+        url: '/showorder',
+        success: function (response) {
+            let rows = response['daftarorderan'];
+            if (!rows || rows.length === 0) return;
+
+            $('#showoderan').empty();
+
+            let groupedOrders = {};
+            for (let item of rows) {
+                let key = item['order_id'] + "_" + item['tanggal'];
+                groupedOrders[key] = groupedOrders[key] || [];
+                groupedOrders[key].push(item);
+            }
+
+            let sortedGroups = Object.entries(groupedOrders).sort((a, b) => {
+                let dateA = new Date(a[1][0].tanggal);
+                let dateB = new Date(b[1][0].tanggal);
+                return dateB - dateA;
+            }).reverse();
+
+            for (let [key, group] of sortedGroups) {
+                let { order_id: id, tanggal: waktu } = group[0];
+                let status = group[0].status.toLowerCase();
+
+                if (status !== 'dibatalkan') continue;
+
+                let totalSemua = 0;
+                let jumlahSemua = 0;
+
+                let itemHTML = group.map((item, idx) => {
+                    let jumlah = parseInt(item.jumlah);
+                    let harga = parseInt(item.harga);
+
+                    totalSemua += harga;
+                    jumlahSemua += jumlah;
+
+                    let carouselId = `carousel-${id}-${idx}`;
+                    let covers = item.AllCover || [];
+                    let indicators = '', inner = '';
+
+                    for (let i = 0; i < covers.length; i++) {
+                        let activeClass = i === 0 ? 'active' : '';
+                        indicators += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${i + 1}"></button>`;
+                        inner += `<div class="carousel-item ${activeClass}"><img src="/static/${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
+                    }
+
+                    return `
+                        <div class="row g-4 align-items-center py-3 border-bottom order-group" data-orderid="${id}">
+                            <div class="col-md-4">
+                                <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-indicators">${indicators}</div>
+                                    <div class="carousel-inner rounded-3">${inner}</div>
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <h4 class="fw-bold text-info">${item.judul}</h4>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <strong>Jumlah:</strong>
+                                        <span class="item-jumlah">${item.jumlah}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <strong>Total:</strong>
+                                        <span class="item-harga">Rp.${item.harga.toLocaleString('id-ID')}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <strong>Status:</strong>
+                                        <span class="text-danger">${item.status}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                let tombolAksi = `
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <button class="btn btn-outline-secondary" type="button" onclick="chatPenjual('${id}')">💬 Chat Penjual</button>
+                    </div>
+                `;
+
+                let labelTambahan = `<span class="position-absolute top-0 end-0 badge bg-danger m-3 rounded-pill">Dibatalkan</span>`;
+
+                let temp_html = `
+                    <div class="card shadow-lg p-4 rounded-4 mb-4 position-relative" id="order-card-${id}">
+                        ${labelTambahan}
+                        <h4 class="mb-3">${formatTanggal(waktu)}</h4>
+                        ${itemHTML}
+                        ${tombolAksi}
+                    </div>
+                `;
+
+                $('#showoderan').append(temp_html);
+            }
+        },
+        error: function () {
+            Swal.fire("Error", "Gagal mengambil data pesanan dari server", "error");
+        }
+    });
+}
+
+function showorderSelesai() {
+    $.ajax({
+        type: 'GET',
+        url: '/showorder',
+        success: function (response) {
+            let rows = response['daftarorderan'];
+            if (!rows || rows.length === 0) return;
+
+            $('#showoderan').empty();
+
+            let groupedOrders = {};
+            for (let item of rows) {
+                let key = item['order_id'] + "_" + item['tanggal'];
+                groupedOrders[key] = groupedOrders[key] || [];
+                groupedOrders[key].push(item);
+            }
+
+            let sortedGroups = Object.entries(groupedOrders).sort((a, b) => {
+                let dateA = new Date(a[1][0].tanggal);
+                let dateB = new Date(b[1][0].tanggal);
+                return dateB - dateA;
+            }).reverse();
+
+            for (let [key, group] of sortedGroups) {
+                let { order_id: id, tanggal: waktu } = group[0];
+                let status = group[0].status.toLowerCase();
+
+                if (status !== 'pesanan selesai') continue;
+
+                let totalSemua = 0;
+                let jumlahSemua = 0;
+
+                let itemHTML = group.map((item, idx) => {
+                    let jumlah = parseInt(item.jumlah);
+                    let harga = parseInt(item.harga);
+
+                    totalSemua += harga;
+                    jumlahSemua += jumlah;
+
+                    let carouselId = `carousel-${id}-${idx}`;
+                    let covers = item.AllCover || [];
+                    let indicators = '', inner = '';
+
+                    for (let i = 0; i < covers.length; i++) {
+                        let activeClass = i === 0 ? 'active' : '';
+                        indicators += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${i + 1}"></button>`;
+                        inner += `<div class="carousel-item ${activeClass}"><img src="/static/${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
+                    }
+
+                    return `
+                        <div class="row g-4 align-items-center py-3 border-bottom order-group" data-orderid="${id}">
+                            <div class="col-md-4">
+                                <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-indicators">${indicators}</div>
+                                    <div class="carousel-inner rounded-3">${inner}</div>
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <h4 class="fw-bold text-info">${item.judul}</h4>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <strong>Jumlah:</strong>
+                                        <span class="item-jumlah">${item.jumlah}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <strong>Total:</strong>
+                                        <span class="item-harga">Rp.${item.harga.toLocaleString('id-ID')}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <strong>Status:</strong>
+                                        <span class="text-success">${item.status}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                let tombolAksi = `
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <button class="btn btn-outline-secondary" type="button" onclick="chatPenjual('${id}')">💬 Chat Penjual</button>
+                    </div>
+                `;
+
+                let labelTambahan = `<span class="position-absolute top-0 end-0 badge bg-success m-3 rounded-pill">Pesanan Selesai</span>`;
+
+                let temp_html = `
+                    <div class="card shadow-lg p-4 rounded-4 mb-4 position-relative" id="order-card-${id}">
+                        ${labelTambahan}
+                        <h4 class="mb-3">${formatTanggal(waktu)}</h4>
+                        ${itemHTML}
+                        ${tombolAksi}
+                    </div>
+                `;
+
+                $('#showoderan').append(temp_html);
+            }
+        },
+        error: function () {
+            Swal.fire("Error", "Gagal mengambil data pesanan dari server", "error");
         }
     });
 }
