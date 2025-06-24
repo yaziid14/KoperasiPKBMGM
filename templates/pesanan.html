@@ -203,7 +203,7 @@
     <script>
         let stream;
 
-        async function verifikasiSebelumBayar(orderid, jumlah, total, tanggal) {
+        async function verifikasiSebelumBayar(orderid, tanggal) {
             const username = $.cookie('username');
             if (!username) {
                 Swal.fire("Gagal", "Username tidak ditemukan.", "error");
@@ -231,7 +231,7 @@
 
                     // Mulai capture setelah wajah stabil
                     setTimeout(() => {
-                        captureDescriptorForBayar(orderid, jumlah, total, tanggal);
+                        captureDescriptorForBayar(orderid, tanggal);
                     }, 700);
                 };
             } catch (err) {
@@ -256,7 +256,7 @@
             canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
         }
 
-        async function captureDescriptorForBayar(orderid, jumlah, total, tanggal) {
+        async function captureDescriptorForBayar(orderid, tanggal) {
             const username = $.cookie('username');
             const canvas = document.getElementById('face-capture');
             const ctx = canvas.getContext('2d');
@@ -285,7 +285,7 @@
                     cancelButtonText: "❌ Batal"
                 }).then(result => {
                     if (result.isConfirmed) {
-                        verifikasiSebelumBayar(orderid, jumlah, total, tanggal);
+                        verifikasiSebelumBayar(orderid, tanggal);
                     } else {
                         closeFaceModal();
                     }
@@ -308,7 +308,7 @@
                 success: function (response) {
                     if (response.result === 'success') {
                         closeFaceModal();
-                        testpembayaran(orderid, jumlah, total, tanggal);
+                        pembayaran(orderid, tanggal);
                     } else {
                         Swal.fire({
                             icon: 'error',

@@ -1983,7 +1983,7 @@ function showorder() {
                 if (status === 'belum bayar') {
                     tombolAksi = `
                         <div class="d-flex justify-content-center gap-2 mt-3">
-                            <button class="btn btn-outline-danger" type="button" onclick="verifikasiSebelumBayar('${id}', ${jumlahSemua}, ${totalSemua}, '${waktu}')">Bayar</button>
+                            <button class="btn btn-outline-danger" type="button" onclick="pembayaran('${id}', '${waktu}')">Bayar</button>
                             <button class="btn btn-outline-secondary" type="button" onclick="hapusPesanan('${id}')">🗑️ Hapus Pesanan</button>
                         </div>
                     `;
@@ -2180,62 +2180,25 @@ function batalkanPermintaanPembatalan(id) {
     });
 }
 
-function testpembayaran(orderid, jumlah, total, tanggal) {
-    Swal.fire({
-        title: 'Konfirmasi Pembayaran',
-        html: `Yakin ingin mengonfirmasi pembayaran untuk Order ID <b>${orderid}</b>?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, Bayar',
-        cancelButtonText: 'Batal'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $.ajax({
-                type: 'POST',
-                url: '/bayar-test',
-                data: {
-                    orderid_give: orderid,
-                    jumlah_give: jumlah,
-                    total_give: total,
-                    tanggal_give: tanggal
-                },
-                success: function (res) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: res.msg || 'Pembayaran berhasil',
-                        toast: true,
-                        position: 'top-end',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                    showorder();  // Refresh tampilan order jika perlu
-                },
-                error: function () {
-                    Swal.fire('Error', 'Gagal memproses pembayaran', 'error');
-                }
-            });
-        }
-    });
-}
-
-
-function pembayaran(orderid, jumlah, total, tanggal) {
+function pembayaran(orderid, tanggal) {
     let username = $.cookie('username');
 
-    if (!username || isNaN(jumlah) || isNaN(total)) {
+    if (!username || !orderid || !tanggal) {
         alert("Data checkout tidak valid.");
         return;
     }
+
+    // Format tanggal agar jadi "YYYY-MM-DD HH:mm:ss"
+    const orderDate = new Date(tanggal);
+    const pad = (n) => (n < 10 ? '0' + n : n);
+    const formattedTanggal = `${orderDate.getFullYear()}-${pad(orderDate.getMonth() + 1)}-${pad(orderDate.getDate())} ${pad(orderDate.getHours())}:${pad(orderDate.getMinutes())}:${pad(orderDate.getSeconds())}`;
 
     $.ajax({
         type: 'POST',
         url: '/bayar',
         data: {
-            username_give: username,
-            jumlah_give: jumlah,
-            total_give: total,
-            orderid_give: orderid,
-            tanggal_give: tanggal
+            order_id: orderid,
+            tanggal_give: formattedTanggal
         },
         success: function (response) {
             if (response.result === 'success' && response.snap_token) {

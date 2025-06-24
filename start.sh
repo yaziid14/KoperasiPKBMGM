@@ -2,21 +2,21 @@
 set -eu
 
 export PYTHONUNBUFFERED=true
-
 VIRTUALENV=.data/venv
 
-# Buat virtualenv kalau belum ada
+# Buat virtualenv jika belum ada
 if [ ! -d "$VIRTUALENV" ]; then
   python3 -m venv "$VIRTUALENV"
 fi
 
-# Install pip kalau belum ada
+# Jika pip belum ada, ambil manual (karena ensurepip tidak tersedia)
 if [ ! -f "$VIRTUALENV/bin/pip" ]; then
-  curl --silent --show-error --retry 5 https://bootstrap.pypa.io/get-pip.py | "$VIRTUALENV/bin/python"
+  curl --silent --show-error --retry 5 https://bootstrap.pypa.io/pip/3.6/get-pip.py | "$VIRTUALENV/bin/python"
 fi
 
-# Install semua requirements
+# Install/update pip dan install requirements
+"$VIRTUALENV/bin/pip" install --upgrade pip setuptools wheel
 "$VIRTUALENV/bin/pip" install -r requirements.txt
 
-# Jalankan app
+# Jalankan aplikasi
 "$VIRTUALENV/bin/python" app.py
