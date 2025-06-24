@@ -1,4 +1,3 @@
-// Page Login
 function sign_in() {
     let username = $('#inputUsername').val();
     let password = $('#inputPassword').val();
@@ -11,36 +10,31 @@ function sign_in() {
             password_give: password,
         },
         success: function (response) {
-            console.log(response)
             if (response["result"] === "success") {
                 $.removeCookie('mytoken', { path: '/' });
                 $.removeCookie('role', { path: '/' });
+                $.cookie("mytoken", response["token"], { path: "/" });
+                $.cookie("role", response["role"], { path: "/" });
+                $.cookie("username", response["username"], { path: "/" });
+
                 if (response["role"] === "admin") {
-                    $.cookie("mytoken", response["token"], { path: "/" });
-                    $.cookie("role", response["role"], { path: "/" });
-                    $.cookie("username", response["username"], { path: "/" });
                     window.location.replace("/adminpage");
-                }
-                if (response["role"] === "user") {
-                    $.cookie("mytoken", response["token"], { path: "/" });
-                    $.cookie("role", response["role"], { path: "/" });
-                    $.cookie("username", response["username"], { path: "/" });
+                } else if (response["role"] === "user") {
                     window.location.replace("/userpage");
-                }
-                else {
-                    $.cookie("mytoken", response["token"], { path: "/" });
-                    $.cookie("role", response["role"], { path: "/" });
-                    $.cookie("username", response["username"], { path: "/" });
-                    window.location.replace("/")
+                } else {
+                    window.location.replace("/");
                 }
             } else {
+                let titleMsg = response["msg"];
+                let iconType = 'error';
+
                 Swal.fire({
                     toast: true,
                     position: 'top-start',
-                    icon: 'error',
-                    title: response["msg"],
+                    icon: iconType,
+                    title: titleMsg,
                     showConfirmButton: false,
-                    timer: 1000,
+                    timer: 1500,
                     timerProgressBar: true
                 });
             }
@@ -1987,6 +1981,13 @@ function showorder() {
                             <button class="btn btn-outline-secondary" type="button" onclick="hapusPesanan('${id}')">🗑️ Hapus Pesanan</button>
                         </div>
                     `;
+                } else if (status === 'menunggu pembayaran') {
+                    tombolAksi = `
+                        <div class="d-flex justify-content-center gap-2 mt-3">
+                            <button class="btn btn-outline-primary" type="button" onclick="lanjutkanPembayaran('${id}')">💳 Lanjutkan Pembayaran</button>
+                            <button class="btn btn-outline-secondary" type="button" onclick="hapusPesanan('${id}')">🗑️ Hapus Pesanan</button>
+                        </div>
+                    `;
                 } else {
                     tombolAksi = `
                         <div class="d-flex justify-content-center gap-2 mt-3">
@@ -2204,17 +2205,51 @@ function pembayaran(orderid, tanggal) {
             if (response.result === 'success' && response.snap_token) {
                 window.snap.pay(response.snap_token, {
                     onSuccess: function () {
-                        alert("Pembayaran berhasil!");
-                        location.reload();
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-start',
+                            icon: 'success',
+                            title: "Pembayaran berhasil!",
+                            showConfirmButton: false,
+                            timer: 1000,
+                            timerProgressBar: true
+                        });
+                        showorder();
                     },
                     onPending: function () {
-                        alert("Menunggu pembayaran...");
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-start',
+                            icon: 'info',
+                            title: "Menunggu pembayaran...",
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
                     },
                     onError: function () {
-                        alert("Terjadi kesalahan dalam pembayaran.");
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-start',
+                            icon: 'error',
+                            title: "Terjadi kesalahan dalam pembayaran.",
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
                     },
                     onClose: function () {
                         alert('Kamu menutup popup pembayaran.');
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-start',
+                            icon: 'warning',
+                            title: "Kamu menutup popup pembayaran.",
+                            showConfirmButton: false,
+                            timer: 1000,
+                            timerProgressBar: true
+                        });
+                        return showorder();
                     }
                 });
             } else {
@@ -2225,6 +2260,62 @@ function pembayaran(orderid, tanggal) {
         error: function (xhr, status, error) {
             alert("Terjadi kesalahan saat menghubungi server.");
             console.error("AJAX error:", status, error);
+        }
+    });
+}
+
+function lanjutkanPembayaran(orderId) {
+    $.ajax({
+        type: 'POST',
+        url: '/get-snap-token',
+        data: { order_id: orderId },
+        success: function (response) {
+            if (response.result === 'success') {
+                snap.pay(response.snap_token, {
+                    onSuccess: function (result) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-start',
+                            icon: 'success',
+                            title: "Pembayaran Berhasil",
+                            showConfirmButton: false,
+                            timer: 1000,
+                            timerProgressBar: true
+                        });
+                        showorder();
+                    },
+                    onPending: function (result) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-start',
+                            icon: 'info',
+                            title: "Menunggu Pembayaran, Selesaikan transaksi Anda.",
+                            showConfirmButton: false,
+                            timer: 1000,
+                            timerProgressBar: true
+                        });
+                    },
+                    onError: function (result) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-start',
+                            icon: 'error',
+                            title: "Terjadi kesalahan saat pembayaran.",
+                            showConfirmButton: false,
+                            timer: 1000,
+                            timerProgressBar: true
+                        });
+                    },
+                    onClose: function () {
+                        console.log("User menutup popup tanpa menyelesaikan pembayaran");
+                    }
+                });
+            } else {
+                Swal.fire("Gagal", response.message || "Gagal mendapatkan token pembayaran.", "error");
+            }
+        },
+        error: function () {
+            Swal.fire("Error", "Tidak bisa terhubung ke server.", "error");
         }
     });
 }

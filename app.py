@@ -114,32 +114,31 @@ def sign_in():
     username_receive = request.form.get('username_give')
     password_receive = request.form.get('password_give')
     pw_hash = hashlib.sha256(password_receive.encode("utf-8")).hexdigest()
-    result = db.login.find_one({
-        "username": username_receive,
-        "password": pw_hash,
-    })
-    if result:
-        payload = {
-            'id': username_receive,
-        }
-        token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
-        return jsonify(
-            {
+    user = db.login.find_one({"username": username_receive})
+
+    if user:
+        if user["password"] == pw_hash:
+            payload = {'id': username_receive}
+            token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+            return jsonify({
                 "result": "success",
                 "token": token,
-                "role": result["role"],
-                "username": result["username"]
-            }
-        )
-
-    else:
-        return jsonify(
-            {
+                "role": user["role"],
+                "username": user["username"]
+            })
+        else:
+            return jsonify({
                 "result": "fail",
-                "msg": "Username/pasword yang anda masukan salah",
-            }
-        )
+                "msg": "Password yang Anda masukkan salah",
+                "error": "password"
+            })
+    else:
+        return jsonify({
+            "result": "fail",
+            "msg": "Username tidak ditemukan",
+            "error": "username"
+        })
 
 
 @app.route('/check_id', methods=['POST'])
@@ -587,63 +586,44 @@ def orderan():
     })
 
 
-@app.route('/bayar-test', methods=['POST'])
-def bayar_test():
-    orderid = request.form.get('orderid_give')
-
-    if not orderid:
-        return jsonify({'result': 'error', 'msg': 'Order ID tidak ditemukan'})
-
-    result = db.orderan.update_many(
-        {'order_id': orderid, 'status': 'Belum Bayar'},
-        {'$set': {'status': 'Sudah Bayar'}}
-    )
-
-    if result.modified_count > 0:
-        return jsonify({'result': 'success', 'msg': 'Status berhasil diubah menjadi "sudah bayar"'})
-    else:
-        return jsonify({'result': 'error', 'msg': 'Tidak ada pesanan yang diupdate'})
-
-
 @app.route('/bayar', methods=['POST'])
 def bayar():
     try:
-        # Ambil data dari POST
         data = request.get_json() if request.is_json else request.form.to_dict()
 
         order_id = data.get('order_id')
-        tanggal_str = data.get('tanggal_give')  # Format: "YYYY-MM-DD HH:mm:ss"
+        tanggal_str = data.get('tanggal_give')
 
-        # Validasi awal
         if not order_id or not tanggal_str:
             return jsonify({"result": "error", "message": "Order ID dan tanggal wajib diisi."}), 400
 
-        # Cari order dari database
-        order = db.orderan.find_one({'order_id': order_id})
-        if not order:
+        # Ambil semua item dengan order_id yang sama
+        orders = list(db.orderan.find({'order_id': order_id}))
+
+        if not orders:
             return jsonify({"result": "error", "message": "Order tidak ditemukan."}), 404
 
-        # Konversi tanggal_give ke format Midtrans (WIB +0700)
+        # Konversi waktu ke zona WIB (Midtrans butuh ini)
         try:
-            waktu_obj = datetime.strptime(tanggal_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Asia/Jakarta"))
-            start_time = waktu_obj.strftime("%Y-%m-%d %H:%M:%S %z")  # Contoh: "2025-06-24 11:48:35 +0700"
+            waktu_obj = datetime.strptime(
+                tanggal_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Asia/Jakarta"))
+            # Format: 2025-06-25 13:00:00 +0700
+            start_time = waktu_obj.strftime("%Y-%m-%d %H:%M:%S %z")
         except ValueError:
             return jsonify({"result": "error", "message": "Format tanggal tidak valid."}), 400
 
-        # Hitung total berdasarkan data dari DB
-        jumlah = int(order.get('jumlah', 0))
-        harga = int(order.get('harga', 0))
-        total = jumlah * harga
+        # Hitung total harga (tanpa mengalikan jumlah)
+        total = sum(int(item.get('harga', 0)) for item in orders)
+        username = orders[0].get('username', 'User')
 
-        # Buat transaksi Snap
         transaction = {
             "transaction_details": {
                 "order_id": order_id,
                 "gross_amount": total
             },
             "customer_details": {
-                "first_name": order.get('username', 'User'),
-                "email": f"{order.get('username', 'user')}@example.com"
+                "first_name": username,
+                "email": f"{username}@example.com"
             },
             "expiry": {
                 "start_time": start_time,
@@ -658,8 +638,8 @@ def bayar():
         if not snap_token:
             raise Exception("Gagal mendapatkan Snap Token dari Midtrans.")
 
-        # Update status dan simpan token ke DB (TIDAK ubah tanggal)
-        db.orderan.update_one(
+        # Simpan token dan ubah status ke 'Menunggu Pembayaran'
+        db.orderan.update_many(
             {'order_id': order_id},
             {'$set': {
                 'snap_token': snap_token,
@@ -671,7 +651,7 @@ def bayar():
             "result": "success",
             "snap_token": snap_token,
             "order_id": order_id,
-            "msg": "Silakan selesaikan pembayaran"
+            "msg": "Silakan lanjutkan ke pembayaran"
         })
 
     except Exception as e:
@@ -682,6 +662,27 @@ def bayar():
         }), 500
 
 
+@app.route('/get-snap-token', methods=['POST'])
+def get_snap_token():
+    try:
+        data = request.get_json() if request.is_json else request.form.to_dict()
+        order_id = data.get('order_id')
+
+        if not order_id:
+            return jsonify({'result': 'error', 'message': 'Order ID tidak ditemukan'}), 400
+
+        order = db.orderan.find_one({'order_id': order_id})
+        if not order:
+            return jsonify({'result': 'error', 'message': 'Order tidak ditemukan'}), 404
+
+        snap_token = order.get('snap_token')
+        if not snap_token:
+            return jsonify({'result': 'error', 'message': 'Token pembayaran tidak tersedia'}), 404
+
+        return jsonify({'result': 'success', 'snap_token': snap_token})
+    except Exception as e:
+        return jsonify({'result': 'error', 'message': str(e)}), 500
+
 
 @app.route('/payment-callback', methods=['POST'])
 def payment_callback():
@@ -689,28 +690,46 @@ def payment_callback():
         notification = request.get_json()
         transaction_status = notification.get('transaction_status')
         order_id = notification.get('order_id')
+        status_message = notification.get('status_message', '')
+        payment_type = notification.get('payment_type', '')
+        fraud_status = notification.get('fraud_status', '')
 
         if not order_id:
             return jsonify({'message': 'Order ID tidak ditemukan'}), 400
 
-        # Jika status pembayaran sukses, update status di DB
-        if transaction_status == 'settlement':  # pembayaran sukses
-            db.orderan.update_one(
-                {'order_id': order_id},
-                {'$set': {'status': 'Sudah Bayar'}}
-            )
+        # Siapkan status default
+        status = "Diproses"
 
+        # Mapping status Midtrans ke status internal
+        if transaction_status == 'settlement':
+            status = "Sudah Bayar"
         elif transaction_status in ['cancel', 'deny', 'expire']:
-            db.orderan.update_one(
-                {'order_id': order_id},
-                {'$set': {'status': 'Dibatalkan'}}
-            )
+            status = "Dibatalkan"
+        elif transaction_status == 'pending':
+            status = "Menunggu Pembayaran"
+        elif transaction_status == 'capture':
+            if fraud_status == 'challenge':
+                status = "Perlu Verifikasi"
+            else:
+                status = "Sudah Bayar"
 
-        return jsonify({'message': 'Notifikasi diproses'}), 200
+        # Update semua entri yang memiliki order_id yang sama
+        db.orderan.update_many(
+            {'order_id': order_id},
+            {'$set': {
+                'status': status,
+                'transaction_status': transaction_status,
+                'payment_type': payment_type,
+                'status_message': status_message,
+                'fraud_status': fraud_status
+            }}
+        )
+
+        return jsonify({'message': f'Status pembayaran diperbarui ke: {status}'}), 200
 
     except Exception as e:
         logging.exception("Gagal memproses notifikasi Midtrans:")
-        return jsonify({'message': 'Server error'}), 500
+        return jsonify({'message': 'Terjadi kesalahan pada server'}), 500
 
 
 @app.route('/orders')
