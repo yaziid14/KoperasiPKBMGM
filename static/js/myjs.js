@@ -1107,7 +1107,7 @@ function edit() {
             <div class="form-group">
                 <label for="kategori">Nama Barang:</label>
                 <input type="text" id="judul" name="judul"
-                    value="${judul}" readonly>
+                    value="${judul}" disabled>
             </div>
             <div class="form-group">
                 <label for="deskripsi">Deskripsi Barang:</label>
