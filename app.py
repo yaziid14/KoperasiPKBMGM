@@ -221,7 +221,8 @@ def extract_public_id(cloudinary_url):
             # Hilangkan transformasi dan versi
             if ',' in seg:  # Transformasi: f_auto,q_auto,...
                 continue
-            if seg.startswith('v') and seg[1:].isdigit():  # Versi seperti v162234234
+            # Versi seperti v162234234
+            if seg.startswith('v') and seg[1:].isdigit():
                 continue
             clean_segments.append(seg)
 
@@ -366,7 +367,8 @@ def hapus_user():
         public_id = extract_public_id(old_url)
         if public_id:
             try:
-                result = cloudinary.uploader.destroy(public_id, invalidate=True)
+                result = cloudinary.uploader.destroy(
+                    public_id, invalidate=True)
                 print(f"Hapus foto profil: {public_id} → {result}")
             except Exception as e:
                 print(f"Gagal menghapus gambar profil Cloudinary: {e}")
@@ -379,7 +381,8 @@ def hapus_user():
             public_id = extract_public_id(file_url)
             if public_id:
                 try:
-                    result = cloudinary.uploader.destroy(public_id, resource_type="raw", invalidate=True)
+                    result = cloudinary.uploader.destroy(
+                        public_id, resource_type="raw", invalidate=True)
                     print(f"Hapus descriptor: {public_id} → {result}")
                 except Exception as e:
                     print(f"Gagal menghapus descriptor Cloudinary: {e}")
@@ -552,8 +555,10 @@ def update_profile():
                     try:
                         public_id_old = extract_public_id(old_url)
                         if public_id_old:
-                            result = cloudinary.uploader.destroy(public_id_old, invalidate=True)
-                            print(f"Hapus foto profil lama: {public_id_old} → {result}")
+                            result = cloudinary.uploader.destroy(
+                                public_id_old, invalidate=True)
+                            print(
+                                f"Hapus foto profil lama: {public_id_old} → {result}")
                     except Exception as e:
                         print(f"Gagal menghapus gambar lama: {e}")
             except Exception as upload_err:
@@ -1248,6 +1253,32 @@ def api_verifikasi_wajah():
         })
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return jsonify({"verifikasi_wajah": False}), 401
+
+
+@app.route("/cek-descriptor", methods=["POST"])
+def cek_descriptor():
+    try:
+        username = request.json.get("username")
+        user = db.login.find_one({"username": username})
+
+        if not user or "descriptors" not in user or not user["descriptors"]:
+            return jsonify({"result": "error", "msg": "Tidak ada descriptor"})
+
+        for d in user["descriptors"]:
+            url = d.get("url")
+            if not url:
+                continue
+            try:
+                response = requests.head(url, timeout=3)
+                if response.status_code == 200:
+                    # Ada minimal 1 yang valid
+                    return jsonify({"result": "ok"})
+            except:
+                continue
+
+        return jsonify({"result": "error", "msg": "Semua descriptor tidak tersedia"})
+    except Exception as e:
+        return jsonify({"result": "error", "msg": f"Gagal cek descriptor: {str(e)}"}), 500
 
 
 @app.route('/verifikasi-wajah', methods=['POST'])

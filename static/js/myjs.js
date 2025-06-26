@@ -1563,6 +1563,33 @@ function profile() {
     `;
 
     $('#editprofile').empty().append(temp_html); // pastikan bersihkan sebelum append
+
+    // Cek ulang descriptor jika sudah terverifikasi
+    if (verifikasi) {
+        cekKetersediaanDescriptor(username);
+    }
+}
+
+function cekKetersediaanDescriptor(username) {
+    fetch('/cek-descriptor', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username: username })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.result === 'error') {
+                // Descriptor tidak ada → tampilkan tombol verifikasi ulang
+                $("#btn-verifikasi-wajah").replaceWith(`
+                <button onclick="openFaceModal()" class="btn btn-warning">🔄 Verifikasi Ulang</button>
+            `);
+            }
+        })
+        .catch(err => {
+            console.error("Gagal cek descriptor:", err);
+        });
 }
 
 // Page Regis User
