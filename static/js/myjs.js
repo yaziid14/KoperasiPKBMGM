@@ -447,7 +447,7 @@ function tampil_admin() {
                 for (let j = 0; j < coverList.length; j++) {
                     carouselItems += `
                     <div class="carousel-item ${j === 0 ? 'active' : ''}">
-                        <img src="/static/${coverList[j]}" class="d-block w-100 card-book-img1" alt="cover-${j}">
+                        <img src="${coverList[j]}" class="d-block w-100 card-book-img1" alt="cover-${j}">
                     </div>`;
                 }
 
@@ -473,7 +473,7 @@ function tampil_admin() {
                     // Only show single image, no carousel needed
                     carouselHTML = `
                     <div>
-                        <img src="/static/${coverList[0]}" class="d-block w-100 card-book-img1" alt="cover-0">
+                        <img src="${coverList[0]}" class="d-block w-100 card-book-img1" alt="cover-0">
                     </div>`;
                 }
 
@@ -546,7 +546,7 @@ function tampil_user() {
                     for (let j = 0; j < coverList.length; j++) {
                         carouselItems += `
                         <div class="carousel-item ${j === 0 ? 'active' : ''}">
-                            <img src="/static/${coverList[j]}" class="d-block w-100 card-book-img1" alt="cover-${j}">
+                            <img src="${coverList[j]}" class="d-block w-100 card-book-img1" alt="cover-${j}">
                         </div>`;
                     }
 
@@ -567,7 +567,7 @@ function tampil_user() {
                 } else {
                     carouselHTML = `
                     <div>
-                        <img src="/static/${coverList[0]}" class="d-block w-100 card-book-img1" alt="cover-0">
+                        <img src="${coverList[0]}" class="d-block w-100 card-book-img1" alt="cover-0">
                     </div>`;
                 }
 
@@ -656,7 +656,7 @@ function showcart() {
 
                     carouselItems += `
                         <div class="carousel-item ${j === 0 ? 'active' : ''}">
-                            <img src="/static/${coverList[j]}" class="d-block w-100 card-book-img1" alt="cover-${j}">
+                            <img src="${coverList[j]}" class="d-block w-100 card-book-img1" alt="cover-${j}">
                         </div>`;
                 }
 
@@ -682,7 +682,7 @@ function showcart() {
                 } else {
                     carouselHTML = `
                         <div>
-                            <img src="/static/${coverList[0]}" class="d-block w-100 card-book-img1" alt="cover-0">
+                            <img src="${coverList[0]}" class="d-block w-100 card-book-img1" alt="cover-0">
                         </div>`;
                 }
 
@@ -983,7 +983,7 @@ function detail() {
 
         carouselItems += `
             <div class="carousel-item ${j === 0 ? 'active' : ''}" data-bs-interval="3000">
-                <img src="/static/${coverList[j]}" class="d-block w-100 card-book-img" alt="cover-${j}">
+                <img src="${coverList[j]}" class="d-block w-100 card-book-img" alt="cover-${j}">
             </div>`;
     }
 
@@ -1066,7 +1066,7 @@ function edit() {
 
         carouselItems += `
             <div class="carousel-item ${j === 0 ? 'active' : ''}" data-bs-interval="3000">
-                <img src="/static/${coverList[j]}" class="d-block w-100 detail-img" alt="cover-${j}">
+                <img src="${coverList[j]}" class="d-block w-100 detail-img" alt="cover-${j}">
             </div>`;
     }
 
@@ -1295,7 +1295,7 @@ function showfav() {
 
                     carouselItems += `
                         <div class="carousel-item ${j === 0 ? 'active' : ''}">
-                            <img src="/static/${coverList[j]}" class="d-block w-100 card-book-img1" alt="cover-${j}">
+                            <img src="${coverList[j]}" class="d-block w-100 card-book-img1" alt="cover-${j}">
                         </div>`;
                 }
 
@@ -1321,7 +1321,7 @@ function showfav() {
                 } else {
                     carouselHTML = `
                         <div>
-                            <img src="/static/${coverList[0]}" class="d-block w-100 card-book-img1" alt="cover-0">
+                            <img src="${coverList[0]}" class="d-block w-100 card-book-img1" alt="cover-0">
                         </div>`;
                 }
 
@@ -1394,7 +1394,7 @@ function tampil() {
                     for (let j = 0; j < coverList.length; j++) {
                         carouselItems += `
                         <div class="carousel-item ${j === 0 ? 'active' : ''}">
-                            <img src="/static/${coverList[j]}" class="d-block w-100 card-book-img1" alt="cover-${j}">
+                            <img src="${coverList[j]}" class="d-block w-100 card-book-img1" alt="cover-${j}">
                         </div>`;
                     }
 
@@ -1415,7 +1415,7 @@ function tampil() {
                 } else {
                     carouselHTML = `
                     <div>
-                        <img src="/static/${coverList[0]}" class="d-block w-100 card-book-img1" alt="cover-0">
+                        <img src="${coverList[0]}" class="d-block w-100 card-book-img1" alt="cover-0">
                     </div>`;
                 }
 
@@ -1624,7 +1624,7 @@ function profile() {
     let temp_html = `
     <div class="col-4 photo">
         <h2 class="bold mt-3 ms-1">FOTO PROFIL</h2>
-        <img src="/static/${profile}" class="img-thumbnail gambar mt-3" alt="Profile">
+        <img src="${profile}" class="img-thumbnail gambar mt-3" alt="Profile">
         <div class="custom-file-input ms-1 mt-4 mb-4 bold">
             <label for="profile-user">Choose File</label>
             <input type="file" id="profile-user" name="profile-user">
@@ -1999,7 +1999,7 @@ function showorder() {
                     for (let i = 0; i < covers.length; i++) {
                         let activeClass = i === 0 ? 'active' : '';
                         indicators += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${i + 1}"></button>`;
-                        inner += `<div class="carousel-item ${activeClass}"><img src="/static/${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
+                        inner += `<div class="carousel-item ${activeClass}"><img src="${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
                     }
 
                     return `
@@ -2561,7 +2561,7 @@ function showorderadmin() {
                     for (let i = 0; i < covers.length; i++) {
                         let activeClass = i === 0 ? 'active' : '';
                         indicators += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${i + 1}"></button>`;
-                        inner += `<div class="carousel-item ${activeClass}"><img src="/static/${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
+                        inner += `<div class="carousel-item ${activeClass}"><img src="${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
                     }
 
                     return `
@@ -2667,7 +2667,7 @@ function lihatUser() {
             tbody.empty();
 
             users.forEach(user => {
-                const foto = user.profile_default ? `/static/${user.profile_default}` : '/static/default.png';
+                const foto = user.profile_default ? `${user.profile_default}` : '/static/profil_default.jpg';
                 const email = user.email || '-';
                 const nohp = user.nohp || '-';
                 const alamat = user.alamat || '-';
@@ -2865,7 +2865,7 @@ function showorderDibatalkan() {
                     for (let i = 0; i < covers.length; i++) {
                         let activeClass = i === 0 ? 'active' : '';
                         indicators += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${i + 1}"></button>`;
-                        inner += `<div class="carousel-item ${activeClass}"><img src="/static/${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
+                        inner += `<div class="carousel-item ${activeClass}"><img src="${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
                     }
 
                     return `
@@ -2988,7 +2988,7 @@ function showorderSelesai() {
                     for (let i = 0; i < covers.length; i++) {
                         let activeClass = i === 0 ? 'active' : '';
                         indicators += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${i + 1}"></button>`;
-                        inner += `<div class="carousel-item ${activeClass}"><img src="/static/${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
+                        inner += `<div class="carousel-item ${activeClass}"><img src="${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
                     }
 
                     return `

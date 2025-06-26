@@ -112,7 +112,7 @@
                         <div class="carousel-inner">
                             {% for img in all_cover %}
                             <div class="carousel-item {% if loop.first %}active{% endif %}">
-                                <img src="/static/{{ img }}" class="d-block w-100 card-book-img" alt="Cover Buku">
+                                <img src="{{ img }}" class="d-block w-100 card-book-img" alt="Cover Buku">
                             </div>
                             {% endfor %}
                         </div>
@@ -177,7 +177,7 @@
                             <div class="carousel-inner">
                                 {% for c in covers %}
                                 <div class="carousel-item {% if loop.first %}active{% endif %}">
-                                    <img src="/static/{{ c }}" class="d-block w-100 card-book-img1"
+                                    <img src="{{ c }}" class="d-block w-100 card-book-img1"
                                         alt="cover-{{ loop.index0 }}">
                                 </div>
                                 {% endfor %}
@@ -194,7 +194,7 @@
                             </button>
                         </div>
                         {% else %}
-                        <img src="/static/{{ covers[0] }}" class="d-block w-100 card-book-img1" alt="Book">
+                        <img src="{{ covers[0] }}" class="d-block w-100 card-book-img1" alt="Book">
                         {% endif %}
                     </a>
 

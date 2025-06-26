@@ -1,28 +1,44 @@
-from datetime import datetime, timedelta
-from flask import Flask, request, jsonify
+# 🔧 Standard Library
 import os
 import re
-import jwt
+import io
 import time
 import hashlib
 import logging
-import numpy as np
 from datetime import datetime, timedelta
-from os.path import join, dirname
-from bson import json_util
-from flask import Flask, render_template, request, jsonify, redirect, url_for, current_app as app
-from pymongo import MongoClient
-from dotenv import load_dotenv
+from zoneinfo import ZoneInfo
+
+# 🧱 Third-party Libraries
+import jwt
+import numpy as np
+import requests
+from flask import (
+    Flask, request, jsonify, render_template,
+    redirect, url_for, current_app as app
+)
 from werkzeug.utils import secure_filename
 from werkzeug.serving import is_running_from_reloader
+from pymongo import MongoClient
+from bson import json_util
+from dotenv import load_dotenv
+from io import BytesIO
+from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from midtransclient import Snap
-from zoneinfo import ZoneInfo  # Python 3.9+
-
+import cloudinary
+import cloudinary.uploader
+from cloudinary.utils import cloudinary_url
 
 # === Load .env ===
-dotenv_path = join(dirname(__file__), '.env')
-load_dotenv(dotenv_path)
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=env_path)
+
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+    secure=True
+)
 
 # === Konfigurasi dari .env ===
 MONGODB_URI = os.getenv("MONGODB_URI")
@@ -174,7 +190,7 @@ def ruser():
         'password': password_hash,
         'nohp': '',
         'alamat': '',
-        'profile_default': 'profil_default.jpg',
+        'profile_default': '/static/profil_default.jpg',
         'role': 'user'
     }
     db.login.insert_one(doc)
@@ -195,18 +211,29 @@ def userpage():
 def deletebook():
     judul = request.form.get('judul_give')
     buku = db.barang.find_one({"JudulBuku": judul}, {"_id": False})
-    url = buku.get("URL")
 
-    # Ambil semua cover yang terkait
+    if not buku:
+        return jsonify({'msg': 'Data tidak ditemukan!'})
+
+    url = buku.get("URL")
     cover_old_list = buku.get("AllCover", [])
+
     if isinstance(cover_old_list, str):
         cover_old_list = [cover_old_list]
 
-    # Hapus file gambar satu per satu
-    for old_path in cover_old_list:
-        full_path = os.path.join("static", old_path)
-        if os.path.exists(full_path):
-            os.remove(full_path)
+    # Hapus gambar dari Cloudinary
+    for old_url in cover_old_list:
+        try:
+            # Ambil public_id dari URL Cloudinary
+            # Contoh URL: https://res.cloudinary.com/yourcloud/image/upload/v123456/cover_buku/nama.jpg
+            # hasil: v123456/cover_buku/nama.jpg
+            path_part = old_url.split("/upload/")[-1]
+            # hasil: cover_buku/nama
+            public_id = '/'.join(path_part.split("/")[1:]).split(".")[0]
+
+            cloudinary.uploader.destroy(public_id)
+        except Exception as e:
+            print(f"Gagal menghapus {old_url}: {e}")
 
     # Hapus data dari database
     db.barang.delete_one({'JudulBuku': judul})
@@ -330,7 +357,6 @@ def tambahbuku():
     today = datetime.now()
     mytime = today.strftime('%Y-%m-%d-%H-%M-%S')
 
-    # Ambil semua file gambar
     files = request.files.getlist("gambar_give[]")
 
     if not files or files[0].filename == "":
@@ -345,18 +371,24 @@ def tambahbuku():
         if extension not in ['jpg', 'jpeg', 'png', 'webp']:
             return jsonify({'msg': f'File tidak valid: {filename}'})
 
-        # Simpan sebagai: static/cover/url-name-<index>.ext
-        folder_path = os.path.join("static", "cover")
-        os.makedirs(folder_path, exist_ok=True)
+        # Upload ke Cloudinary
+        public_id = f"{url_receive}-{index+1}"
+        result = cloudinary.uploader.upload(
+            file,
+            folder="cover_buku",
+            public_id=public_id
+        )
 
-        saved_name = f"{url_receive}-{index+1}.{extension}"
-        save_path = os.path.join(folder_path, saved_name)
-        file.save(save_path)
+        # Generate optimized URL
+        optimized_url, _ = cloudinary_url(
+            f"cover_buku/{public_id}",
+            fetch_format="auto",
+            quality="auto"
+        )
 
-        # Simpan relative path ke DB
-        cover_list.append(f"cover/{saved_name}")
+        # Tambahkan ke list
+        cover_list.append(optimized_url)
 
-    # Ambil gambar pertama sebagai thumbnail utama (opsional)
     cover_thumbnail = cover_list[0]
 
     doc = {
@@ -414,23 +446,40 @@ def update_profile():
             'alamat': alamat_receive
         }
 
-        # Simpan foto profil
+        # Simpan foto profil ke Cloudinary
         if "file_give" in request.files:
             file = request.files.get("file_give")
             filename = secure_filename(file.filename)
             extension = filename.split(".")[-1]
-            file_path = f"profile/{username}-{mytime}.{extension}"
-            full_path = os.path.join("static", file_path)
-            os.makedirs(os.path.dirname(full_path), exist_ok=True)
-            file.save(full_path)
-            new_doc['profile_default'] = file_path
 
+            public_id = f"profile/{username}-{mytime}"
+
+            # Upload ke Cloudinary
+            result = cloudinary.uploader.upload(
+                file,
+                folder="profile",
+                public_id=f"{username}-{mytime}",
+                transformation=[
+                    {"fetch_format": "auto", "quality": "auto", "width": 300,
+                        "height": 300, "crop": "fill", "gravity": "face"}
+                ]
+            )
+
+            optimized_url = result['secure_url']
+            new_doc['profile_default'] = optimized_url
+
+            # Hapus foto profil lama jika ada
             user_data = db.login.find_one({"username": username})
-            old_path = user_data.get("profile_default", "")
-            if old_path and old_path != file_path:
-                old_file = os.path.join("static", old_path)
-                if os.path.exists(old_file):
-                    os.remove(old_file)
+            old_url = user_data.get("profile_default", "")
+            if old_url and "res.cloudinary.com" in old_url:
+                try:
+                    # Ambil public_id lama
+                    path_part = old_url.split("/upload/")[-1]
+                    public_id_old = '/'.join(path_part.split("/")
+                                             [1:]).split(".")[0]
+                    cloudinary.uploader.destroy(public_id_old)
+                except Exception as e:
+                    print(f"Gagal menghapus gambar lama: {e}")
 
         db.login.update_one({"username": username}, {"$set": new_doc})
         return jsonify({"result": "success", "msg": "Profil berhasil diperbarui!"})
@@ -920,15 +969,23 @@ def editcover():
     if not date:
         return jsonify({'msg': 'Data tidak ditemukan!'})
 
+    # Dapatkan daftar gambar lama
     cover_old_list = date.get("AllCover", [])
     if isinstance(cover_old_list, str):
         cover_old_list = [cover_old_list]
 
-    for old_path in cover_old_list:
-        full_path = os.path.join("static", old_path)
-        if os.path.exists(full_path):
-            os.remove(full_path)
+    # Dapatkan public_id dari setiap gambar dan hapus dari Cloudinary
+    for old_url in cover_old_list:
+        try:
+            # Ambil nama public_id dari URL Cloudinary
+            # Contoh: https://res.cloudinary.com/yourcloud/image/upload/v1234567890/cover_buku/nama.jpg
+            # ambil "cover_buku/nama"
+            public_id = '/'.join(old_url.split('/')[-2:]).split('.')[0]
+            cloudinary.uploader.destroy(public_id)
+        except Exception as e:
+            print(f"Gagal menghapus {old_url}: {e}")
 
+    # Upload gambar baru
     files = request.files.getlist("gambar_give[]")
     if not files or files[0].filename == "":
         return jsonify({'msg': 'Gambar tidak ditemukan!'})
@@ -943,17 +1000,27 @@ def editcover():
         if extension not in ['jpg', 'jpeg', 'png', 'webp']:
             return jsonify({'msg': f'File tidak valid: {filename}'})
 
-        folder_path = os.path.join("static", "cover")
-        os.makedirs(folder_path, exist_ok=True)
+        # Upload ke Cloudinary
+        public_id = f"cover_buku/{url_receive}-{index+1}"
+        result = cloudinary.uploader.upload(
+            file,
+            public_id=public_id,
+            folder="cover_buku"  # redundant but safe
+        )
 
-        saved_name = f"{url_receive}-{index+1}.{extension}"
-        save_path = os.path.join(folder_path, saved_name)
-        file.save(save_path)
+        # Buat URL yang sudah dioptimasi
+        optimized_url, _ = cloudinary_url(
+            public_id,
+            fetch_format="auto",
+            quality="auto"
+        )
 
-        cover_list.append(f"cover/{saved_name}")
+        cover_list.append(optimized_url)
 
+    # Update database
     new_doc = {
-        "AllCover": cover_list
+        "AllCover": cover_list,
+        "Cover": cover_list[0]  # set gambar pertama sebagai thumbnail
     }
 
     db.barang.update_one({"Date": waktu}, {"$set": new_doc})
@@ -1073,34 +1140,74 @@ def simpan_wajah():
         if not username or descriptor is None:
             return jsonify({"result": "error", "msg": "Data tidak lengkap"}), 400
 
-        # Simpan file .npy ke direktori lokal
-        save_dir = os.path.join('static', 'face_descriptors', username)
-        os.makedirs(save_dir, exist_ok=True)
+        # Konversi descriptor ke bytes .npy
+        np_bytes_io = io.BytesIO()
+        np.save(np_bytes_io, np.array(descriptor))
+        np_bytes_io.seek(0)
 
-        filename = f"{username}_{len(os.listdir(save_dir))}.npy"
-        filepath = os.path.join(save_dir, filename)
-        np.save(filepath, np.array(descriptor))
+        # Buat timestamp dan public_id unik
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        public_id = f"face_descriptors/{username}_{timestamp}"
 
-        # Batasi maksimal 5 file descriptor
-        all_files = sorted(
-            [f for f in os.listdir(save_dir) if f.endswith('.npy')],
-            key=lambda x: os.path.getctime(os.path.join(save_dir, x))
+        # Upload file ke Cloudinary
+        result = cloudinary.uploader.upload(
+            np_bytes_io,
+            resource_type="raw",
+            public_id=public_id,
+            folder="face_descriptors",
+            overwrite=False
         )
-        if len(all_files) > 5:
-            for old_file in all_files[:-5]:
-                os.remove(os.path.join(save_dir, old_file))
 
-        # Simpan status verifikasi ke MongoDB
+        file_url = result['secure_url']
+
+        # Ambil daftar descriptor lama dari DB
+        user = db.login.find_one({"username": username})
+        descriptors = user.get("descriptors", []) if user else []
+
+        # Hapus descriptor tertua jika sudah lebih dari 5
+        if len(descriptors) >= 5:
+            descriptors = sorted(
+                descriptors, key=lambda d: d.get("uploaded", datetime.min))
+            # simpan yang terbaru 4 + 1 baru = 5
+            descriptors_to_remove = descriptors[:len(descriptors) - 4]
+
+            for desc in descriptors_to_remove:
+                old_url = desc.get("url")
+                if old_url and "res.cloudinary.com" in old_url:
+                    try:
+                        # Ekstrak public_id dari URL
+                        path_part = old_url.split("/upload/")[-1]
+                        public_id_old = '/'.join(path_part.split("/")
+                                                 [1:]).split(".")[0]
+                        cloudinary.uploader.destroy(
+                            public_id_old, resource_type="raw")
+                    except Exception as e:
+                        print(f"Gagal menghapus descriptor lama: {e}")
+
+            # Filter out yang sudah dihapus dari list
+            keep_urls = [d["url"] for d in descriptors[len(descriptors) - 4:]]
+            descriptors = [d for d in descriptors if d["url"] in keep_urls]
+
+        # Tambahkan descriptor baru
+        new_descriptor = {
+            "url": file_url,
+            "uploaded": datetime.now()
+        }
+        descriptors.append(new_descriptor)
+
+        # Update DB
         db.login.update_one(
             {"username": username},
-            {"$set": {
-                "username": username,
-                "verifikasi": True
-            }},
+            {
+                "$set": {
+                    "verifikasi": True,
+                    "descriptors": descriptors
+                }
+            },
             upsert=True
         )
 
-        return jsonify({"result": "success", "msg": f"Descriptor disimpan dan status verifikasi dicatat."})
+        return jsonify({"result": "success", "msg": "✅ Descriptor disimpan (maks. 5 disimpan)."})
 
     except Exception as e:
         return jsonify({"result": "error", "msg": f"Gagal menyimpan descriptor: {str(e)}"}), 500
@@ -1131,22 +1238,37 @@ def verifikasi_wajah():
         if not username or descriptor_client is None:
             return jsonify({"result": "error", "msg": "Data tidak lengkap"}), 400
 
-        folder = os.path.join('static', 'face_descriptors', username)
-        if not os.path.exists(folder):
+        # Ambil semua descriptor dari MongoDB
+        user_data = db.login.find_one({"username": username})
+        if not user_data or "descriptors" not in user_data:
             return jsonify({"result": "error", "msg": "Data descriptor tidak ditemukan"}), 404
 
         threshold = 0.6
         matched = False
 
-        for filename in os.listdir(folder):
-            if filename.endswith('.npy'):
-                path = os.path.join(folder, filename)
-                descriptor_saved = np.load(path)
+        for descriptor_info in user_data["descriptors"]:
+            file_url = descriptor_info.get("url")
+            if not file_url:
+                continue
 
+            try:
+                # Ambil file dari Cloudinary
+                response = requests.get(file_url)
+                if response.status_code != 200:
+                    continue
+
+                npy_data = BytesIO(response.content)
+                descriptor_saved = np.load(npy_data)
+
+                # Hitung jarak Euclidean
                 distance = np.linalg.norm(descriptor_saved - descriptor_client)
                 if distance < threshold:
                     matched = True
                     break
+
+            except Exception as e:
+                print(f"Gagal membaca descriptor dari URL: {file_url} — {e}")
+                continue
 
         if matched:
             return jsonify({"result": "success", "msg": "✅ Wajah cocok, verifikasi berhasil."})
@@ -1191,4 +1313,3 @@ if not is_running_from_reloader():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-    
