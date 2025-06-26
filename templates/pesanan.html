@@ -257,7 +257,7 @@
         async function captureDescriptorForBayar(orderid, tanggal) {
             const username = $.cookie('username');
             const canvas = document.getElementById('face-capture');
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
             const video = document.getElementById('video');
             const spinner = document.getElementById('spinner');
             const progressBar = document.getElementById('progressBar');

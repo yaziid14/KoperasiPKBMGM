@@ -183,7 +183,7 @@
 
             const video = document.getElementById('video');
             const canvas = document.getElementById('face-capture');
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
             const progressBar = document.getElementById('progressBar');
             const spinner = document.getElementById('spinner');
 
