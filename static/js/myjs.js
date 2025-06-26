@@ -1513,15 +1513,10 @@ function profile() {
     let nohp = user_list['nohp'];
     let alamat = user_list['alamat'];
     let profile = user_list['profile_default'];
-    let verifikasi = user_list['verifikasi_wajah']; // ← tambahkan ini
+    let verifikasi = user_list['verifikasi_wajah']; // dari database
 
-    let verifikasiWajahHTML = '';
-    if (verifikasi) {
-        verifikasiWajahHTML = `<span class="text-success fw-bold">✅ Wajah sudah terverifikasi</span>`;
-        cekKetersediaanDescriptor(username);
-    } else {
-        verifikasiWajahHTML = `<button id="btn-verifikasi-wajah" onclick="openFaceModal()" class="btn btn-secondary">📷 Verifikasi Wajah</button>`;
-    }
+    // Bagian ini hanya placeholder, isi oleh cekKetersediaanDescriptor
+    let verifikasiWajahHTML = `<div id="verifikasi-wajah-placeholder"></div>`;
 
     let temp_html = `
     <div class="col-4 photo">
@@ -1563,9 +1558,20 @@ function profile() {
     </div>
     `;
 
-    $('#editprofile').empty().append(temp_html); // pastikan bersihkan sebelum append
+    $('#editprofile').empty().append(temp_html);
+
+    // Cek descriptor hanya jika user sudah pernah verifikasi
+    if (verifikasi) {
+        cekKetersediaanDescriptor(username);
+    } else {
+        // User belum pernah verifikasi → tampilkan tombol awal
+        $("#verifikasi-wajah-placeholder").html(`
+            <button id="btn-verifikasi-wajah" onclick="openFaceModal()" class="btn btn-secondary">📷 Verifikasi Wajah</button>
+        `);
+    }
 }
 
+// Cek ketersediaan file descriptor di Cloudinary
 function cekKetersediaanDescriptor(username) {
     fetch('/cek-descriptor', {
         method: 'POST',
@@ -1576,17 +1582,23 @@ function cekKetersediaanDescriptor(username) {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.result === 'error') {
-            // Jika descriptor tidak lengkap atau invalid, munculkan tombol verifikasi ulang
-            $("#btn-verifikasi-wajah").replaceWith(`
-                <button onclick="openFaceModal()" class="btn btn-warning" id="btn-verifikasi-wajah">🔄 Verifikasi Ulang</button>
+        if (data.result === 'ok') {
+            // Semua descriptor valid
+            $("#verifikasi-wajah-placeholder").html(`
+                <span class="text-success fw-bold">✅ Wajah sudah terverifikasi</span>
             `);
         } else {
-            console.log("✅ Semua descriptor tersedia dan valid.");
+            // Descriptor tidak lengkap/invalid → tampilkan tombol verifikasi ulang
+            $("#verifikasi-wajah-placeholder").html(`
+                <button onclick="openFaceModal()" class="btn btn-warning" id="btn-verifikasi-wajah">🔄 Verifikasi Ulang</button>
+            `);
         }
     })
     .catch(err => {
         console.error("Gagal cek descriptor:", err);
+        $("#verifikasi-wajah-placeholder").html(`
+            <button onclick="openFaceModal()" class="btn btn-danger" id="btn-verifikasi-wajah">⚠️ Gagal Cek Wajah, Coba Lagi</button>
+        `);
     });
 }
 
