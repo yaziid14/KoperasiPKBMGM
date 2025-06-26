@@ -1181,47 +1181,34 @@ def simpan_wajah():
         if not username or descriptor is None:
             return jsonify({"result": "error", "msg": "Data tidak lengkap"}), 400
 
-        # Konversi descriptor ke bytes .npy
+        # Konversi descriptor ke .npy dalam memory
         np_bytes_io = io.BytesIO()
         np.save(np_bytes_io, np.array(descriptor))
         np_bytes_io.seek(0)
 
-        # Buat timestamp dan public_id unik dengan folder username
+        # Buat nama unik berdasarkan waktu
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         public_id = f"face_descriptors/{username}/{username}_{timestamp}"
 
-        # Upload file ke Cloudinary
-        result = cloudinary.uploader.upload(
-            np_bytes_io,
-            resource_type="raw",
-            public_id=public_id,  # Sudah mengandung folder lengkap
-            overwrite=False
-        )
+        try:
+            # Upload ke Cloudinary
+            result = cloudinary.uploader.upload(
+                np_bytes_io,
+                resource_type="raw",
+                public_id=public_id,
+                overwrite=False
+            )
+        except Exception as upload_err:
+            return jsonify({"result": "error", "msg": f"Gagal upload descriptor: {str(upload_err)}"}), 500
 
-        file_url = result['secure_url']
+        # Pastikan upload sukses
+        file_url = result.get('secure_url')
+        if not file_url:
+            return jsonify({"result": "error", "msg": "Upload ke Cloudinary gagal, tidak ada URL."}), 500
 
-        # Ambil daftar descriptor lama dari DB
+        # Ambil user dari DB
         user = db.login.find_one({"username": username})
         descriptors = user.get("descriptors", []) if user else []
-
-        # Hapus descriptor tertua jika sudah lebih dari 5
-        if len(descriptors) >= 5:
-            descriptors = sorted(descriptors, key=lambda d: d.get("uploaded", datetime.min))
-            descriptors_to_remove = descriptors[:len(descriptors) - 4]
-
-            for desc in descriptors_to_remove:
-                old_url = desc.get("url")
-                if old_url and "res.cloudinary.com" in old_url:
-                    try:
-                        path_part = old_url.split("/upload/")[-1]
-                        public_id_old = '/'.join(path_part.split("/")[1:]).split(".")[0]
-                        cloudinary.uploader.destroy(public_id_old, resource_type="raw")
-                    except Exception as e:
-                        print(f"Gagal menghapus descriptor lama: {e}")
-
-            # Filter out yang sudah dihapus dari list
-            keep_urls = [d["url"] for d in descriptors[len(descriptors) - 4:]]
-            descriptors = [d for d in descriptors if d["url"] in keep_urls]
 
         # Tambahkan descriptor baru
         new_descriptor = {
@@ -1230,7 +1217,7 @@ def simpan_wajah():
         }
         descriptors.append(new_descriptor)
 
-        # Update DB
+        # Update DB hanya jika upload sukses
         db.login.update_one(
             {"username": username},
             {
@@ -1242,7 +1229,7 @@ def simpan_wajah():
             upsert=True
         )
 
-        return jsonify({"result": "success", "msg": "✅ Descriptor disimpan (maks. 5 disimpan)."})
+        return jsonify({"result": "success", "msg": "✅ Descriptor disimpan dan verifikasi berhasil."})
 
     except Exception as e:
         return jsonify({"result": "error", "msg": f"Gagal menyimpan descriptor: {str(e)}"}), 500
