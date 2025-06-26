@@ -205,6 +205,35 @@ def userpage():
     return render_template('user.html')
 
 
+def extract_public_id(cloudinary_url):
+    try:
+        if "res.cloudinary.com" not in cloudinary_url:
+            return None
+
+        # Ambil bagian setelah '/upload/' dan buang versi + transformasi
+        path = cloudinary_url.split("/upload/")[-1]
+
+        # Hapus semua parameter transformasi sebelum folder (misal "cover_buku/")
+        segments = path.split('/')
+        clean_segments = []
+
+        for seg in segments:
+            # Skip segmen transformasi (mengandung koma) dan versi (v123...)
+            if ',' in seg or (seg.startswith('v') and seg[1:].isdigit()):
+                continue
+            clean_segments.append(seg)
+
+        # Gabungkan ulang, hapus ekstensi jika ada
+        public_id = '/'.join(clean_segments)
+        if '.' in public_id:
+            public_id = '.'.join(public_id.split('.')[:-1])
+
+        return public_id
+    except Exception as e:
+        print(f"Error ekstrak public_id: {e}")
+        return None
+
+
 @app.route('/deletebook', methods=['POST'])
 def deletebook():
     judul = request.form.get('judul_give')
@@ -222,19 +251,6 @@ def deletebook():
         all_urls.add(cover_old_list)
     elif isinstance(cover_old_list, list):
         all_urls.update(cover_old_list)
-
-    def extract_public_id(cloudinary_url):
-        try:
-            if "res.cloudinary.com" not in cloudinary_url:
-                return None
-
-            # Ambil bagian setelah 'upload/' dan buang transformasi + versi
-            path = cloudinary_url.split("/upload/")[-1]
-            path = re.sub(r'^(v\d+/|[^/]+,)*v\d+/|^(f_auto,q_auto,|[^/]+,)*', '', path)  # Bersihkan versi dan transformasi
-            return path
-        except Exception as e:
-            print(f"Error ekstrak public_id: {e}")
-            return None
 
     # Proses penghapusan Cloudinary
     for old_url in all_urls:
