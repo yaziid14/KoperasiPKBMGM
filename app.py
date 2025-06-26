@@ -437,7 +437,9 @@ def tambahbuku():
             return jsonify({'msg': f'File tidak valid: {filename}'})
 
         # Upload ke Cloudinary
-        public_id = f"{url_receive}-{index+1}"
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        public_id = f"cover_buku/{url_receive}_{timestamp}_{index+1}"
+
         try:
             result = cloudinary.uploader.upload(
                 file,
@@ -1069,7 +1071,9 @@ def editcover():
         if extension not in ['jpg', 'jpeg', 'png', 'webp']:
             return jsonify({'msg': f'File tidak valid: {filename}'})
 
-        public_id = f"cover_buku/{url_receive}-{index+1}"
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        public_id = f"cover_buku/{url_receive}_{timestamp}_{index+1}"
+
         result = cloudinary.uploader.upload(
             file,
             public_id=public_id,
