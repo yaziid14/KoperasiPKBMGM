@@ -1261,41 +1261,28 @@ def cek_descriptor():
         username = request.json.get("username")
         user = db.login.find_one({"username": username})
 
-        # Cek keberadaan user dan field 'descriptors'
         if not user or "descriptors" not in user:
-            return jsonify({"result": "error", "msg": "Data descriptor tidak ditemukan"}), 404
+            return jsonify({"result": "error", "msg": "Data descriptor tidak ditemukan"}), 200
 
         descriptors = user["descriptors"]
         if len(descriptors) != 5:
-            return jsonify({"result": "error", "msg": "Jumlah descriptor tidak lengkap (harus 5)"}), 400
+            return jsonify({"result": "error", "msg": "Jumlah descriptor tidak lengkap (harus 5)"}), 200
 
-        invalid_count = 0
         for d in descriptors:
             url = d.get("url")
             if not url:
-                invalid_count += 1
-                continue
+                return jsonify({"result": "error", "msg": "Ada descriptor tanpa URL"}), 200
             try:
                 response = requests.head(url, timeout=3)
                 if response.status_code != 200:
-                    invalid_count += 1
+                    return jsonify({"result": "error", "msg": "Ada descriptor tidak tersedia di Cloudinary"}), 200
             except:
-                invalid_count += 1
+                return jsonify({"result": "error", "msg": "Gagal mengakses salah satu descriptor"}), 200
 
-        if invalid_count > 0:
-            return jsonify({
-                "result": "error",
-                "msg": f"{invalid_count} file descriptor tidak tersedia/invalid"
-            })
-
-        # Semua valid
-        return jsonify({"result": "ok", "msg": "Semua descriptor valid"})
+        return jsonify({"result": "ok", "msg": "Semua descriptor valid"}), 200
 
     except Exception as e:
-        return jsonify({
-            "result": "error",
-            "msg": f"Gagal cek descriptor: {str(e)}"
-        }), 500
+        return jsonify({"result": "error", "msg": f"Gagal cek descriptor: {str(e)}"}), 500
 
 
 @app.route('/verifikasi-wajah', methods=['POST'])

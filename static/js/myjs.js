@@ -1574,18 +1574,20 @@ function cekKetersediaanDescriptor(username) {
         },
         body: JSON.stringify({ username: username })
     })
-        .then(response => response.json())
-        .then(data => {
-            if (data.result === 'error') {
-                // Descriptor tidak ada → tampilkan tombol verifikasi ulang
-                $("#btn-verifikasi-wajah").replaceWith(`
-                <button onclick="openFaceModal()" class="btn btn-warning">🔄 Verifikasi Ulang</button>
+    .then(response => response.json())
+    .then(data => {
+        if (data.result === 'error') {
+            // Jika descriptor tidak lengkap atau invalid, munculkan tombol verifikasi ulang
+            $("#btn-verifikasi-wajah").replaceWith(`
+                <button onclick="openFaceModal()" class="btn btn-warning" id="btn-verifikasi-wajah">🔄 Verifikasi Ulang</button>
             `);
-            }
-        })
-        .catch(err => {
-            console.error("Gagal cek descriptor:", err);
-        });
+        } else {
+            console.log("✅ Semua descriptor tersedia dan valid.");
+        }
+    })
+    .catch(err => {
+        console.error("Gagal cek descriptor:", err);
+    });
 }
 
 // Page Regis User
