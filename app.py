@@ -17,13 +17,13 @@ from flask import (
     redirect, url_for, current_app as app
 )
 from werkzeug.utils import secure_filename
-from werkzeug.serving import is_running_from_reloader
+# from werkzeug.serving import is_running_from_reloader
 from pymongo import MongoClient
 from bson import json_util
 from dotenv import load_dotenv
 from io import BytesIO
 from pathlib import Path
-from apscheduler.schedulers.background import BackgroundScheduler
+# from apscheduler.schedulers.background import BackgroundScheduler
 from midtransclient import Snap
 import cloudinary
 import cloudinary.uploader
@@ -49,7 +49,7 @@ MIDTRANS_SERVER_KEY = os.getenv("MIDTRANS_SERVER_KEY")
 MIDTRANS_CLIENT_KEY = os.getenv("MIDTRANS_CLIENT_KEY")
 
 # === Inisialisasi Flask ===
-app = Flask(__name__, instance_relative_config=True)
+app = Flask(__name__)
 
 # === MongoDB ===
 client = MongoClient(MONGODB_URI)
@@ -1084,50 +1084,50 @@ def search(kata):
         return redirect(url_for("/"))
 
 
-def hapus_pesanan_kadaluarsa():
-    """
-    Menghapus pesanan dari koleksi 'orderan' yang berstatus 'Belum Bayar' atau 'Menunggu Pembayaran'
-    dan dibuat lebih dari 1 hari yang lalu, serta mengembalikan stoknya ke koleksi 'barang'.
-    """
-    try:
-        batas_waktu = datetime.now(
-            ZoneInfo("Asia/Jakarta")) - timedelta(days=1)
+# def hapus_pesanan_kadaluarsa():
+#     """
+#     Menghapus pesanan dari koleksi 'orderan' yang berstatus 'Belum Bayar' atau 'Menunggu Pembayaran'
+#     dan dibuat lebih dari 1 hari yang lalu, serta mengembalikan stoknya ke koleksi 'barang'.
+#     """
+#     try:
+#         batas_waktu = datetime.now(
+#             ZoneInfo("Asia/Jakarta")) - timedelta(days=1)
 
-        # Daftar status yang dianggap kadaluarsa
-        status_kadaluarsa = ["Belum Bayar", "Menunggu Pembayaran"]
+#         # Daftar status yang dianggap kadaluarsa
+#         status_kadaluarsa = ["Belum Bayar", "Menunggu Pembayaran"]
 
-        # Cari semua pesanan kadaluarsa
-        pesanan_kadaluarsa = list(db.orderan.find({
-            "status": {"$in": status_kadaluarsa},
-            "waktu": {"$lt": batas_waktu}
-        }))
+#         # Cari semua pesanan kadaluarsa
+#         pesanan_kadaluarsa = list(db.orderan.find({
+#             "status": {"$in": status_kadaluarsa},
+#             "waktu": {"$lt": batas_waktu}
+#         }))
 
-        # Kembalikan stok barang
-        for item in pesanan_kadaluarsa:
-            judul = item.get('judul')
-            jumlah = int(item.get('jumlah', 0))
-            if judul and jumlah > 0:
-                db.barang.update_one(
-                    {'JudulBuku': judul},
-                    {'$inc': {'Stok': jumlah}}
-                )
+#         # Kembalikan stok barang
+#         for item in pesanan_kadaluarsa:
+#             judul = item.get('judul')
+#             jumlah = int(item.get('jumlah', 0))
+#             if judul and jumlah > 0:
+#                 db.barang.update_one(
+#                     {'JudulBuku': judul},
+#                     {'$inc': {'Stok': jumlah}}
+#                 )
 
-        # Hapus pesanan kadaluarsa
-        hasil = db.orderan.delete_many({
-            "status": {"$in": status_kadaluarsa},
-            "waktu": {"$lt": batas_waktu}
-        })
+#         # Hapus pesanan kadaluarsa
+#         hasil = db.orderan.delete_many({
+#             "status": {"$in": status_kadaluarsa},
+#             "waktu": {"$lt": batas_waktu}
+#         })
 
-        print(
-            f"{hasil.deleted_count} pesanan kadaluarsa telah dihapus dan stok dikembalikan.")
+#         print(
+#             f"{hasil.deleted_count} pesanan kadaluarsa telah dihapus dan stok dikembalikan.")
 
-    except Exception as e:
-        print(f"Terjadi kesalahan saat menghapus pesanan kadaluarsa: {e}")
+#     except Exception as e:
+#         print(f"Terjadi kesalahan saat menghapus pesanan kadaluarsa: {e}")
 
 
 # Inisialisasi scheduler (jangan dijalankan langsung di sini!)
-scheduler = BackgroundScheduler()
-scheduler.add_job(hapus_pesanan_kadaluarsa, 'interval', minutes=1)
+# scheduler = BackgroundScheduler()
+# scheduler.add_job(hapus_pesanan_kadaluarsa, 'interval', minutes=1)
 
 
 @app.route('/simpan-wajah', methods=['POST'])
@@ -1316,6 +1316,4 @@ def ajukan_pembatalan():
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    if not is_running_from_reloader():
-        scheduler.start()
     app.run(host='0.0.0.0', port=port)
