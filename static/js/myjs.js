@@ -1518,6 +1518,7 @@ function profile() {
     let verifikasiWajahHTML = '';
     if (verifikasi) {
         verifikasiWajahHTML = `<span class="text-success fw-bold">✅ Wajah sudah terverifikasi</span>`;
+        cekKetersediaanDescriptor(username);
     } else {
         verifikasiWajahHTML = `<button id="btn-verifikasi-wajah" onclick="openFaceModal()" class="btn btn-secondary">📷 Verifikasi Wajah</button>`;
     }
@@ -1563,11 +1564,6 @@ function profile() {
     `;
 
     $('#editprofile').empty().append(temp_html); // pastikan bersihkan sebelum append
-
-    // Cek ulang descriptor jika sudah terverifikasi
-    if (verifikasi) {
-        cekKetersediaanDescriptor(username);
-    }
 }
 
 function cekKetersediaanDescriptor(username) {

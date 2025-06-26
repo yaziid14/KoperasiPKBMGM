@@ -1261,24 +1261,41 @@ def cek_descriptor():
         username = request.json.get("username")
         user = db.login.find_one({"username": username})
 
-        if not user or "descriptors" not in user or not user["descriptors"]:
-            return jsonify({"result": "error", "msg": "Tidak ada descriptor"})
+        # Cek keberadaan user dan field 'descriptors'
+        if not user or "descriptors" not in user:
+            return jsonify({"result": "error", "msg": "Data descriptor tidak ditemukan"}), 404
 
-        for d in user["descriptors"]:
+        descriptors = user["descriptors"]
+        if len(descriptors) != 5:
+            return jsonify({"result": "error", "msg": "Jumlah descriptor tidak lengkap (harus 5)"}), 400
+
+        invalid_count = 0
+        for d in descriptors:
             url = d.get("url")
             if not url:
+                invalid_count += 1
                 continue
             try:
                 response = requests.head(url, timeout=3)
-                if response.status_code == 200:
-                    # Ada minimal 1 yang valid
-                    return jsonify({"result": "ok"})
+                if response.status_code != 200:
+                    invalid_count += 1
             except:
-                continue
+                invalid_count += 1
 
-        return jsonify({"result": "error", "msg": "Semua descriptor tidak tersedia"})
+        if invalid_count > 0:
+            return jsonify({
+                "result": "error",
+                "msg": f"{invalid_count} file descriptor tidak tersedia/invalid"
+            })
+
+        # Semua valid
+        return jsonify({"result": "ok", "msg": "Semua descriptor valid"})
+
     except Exception as e:
-        return jsonify({"result": "error", "msg": f"Gagal cek descriptor: {str(e)}"}), 500
+        return jsonify({
+            "result": "error",
+            "msg": f"Gagal cek descriptor: {str(e)}"
+        }), 500
 
 
 @app.route('/verifikasi-wajah', methods=['POST'])
