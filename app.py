@@ -1035,7 +1035,7 @@ def editbook(book):
 @app.route("/editcover", methods=["POST"])
 def editcover():
     barang = request.form.get('judul_give')
-    databarang = db.barang.find_one({"URL": barang}, {"_id": False})
+    databarang = db.barang.find_one({"JudulBuku": barang}, {"_id": False})
 
     if not databarang:
         return jsonify({'msg': 'Data tidak ditemukan!'})
@@ -1094,27 +1094,25 @@ def editcover():
         "Cover": cover_list[0]  # thumbnail = gambar pertama
     }
 
-    db.barang.update_one({"URL": barang}, {"$set": new_doc})
+    db.barang.update_one({"JudulBuku": barang}, {"$set": new_doc})
     return jsonify({'msg': 'Update Cover Berhasil!'})
 
 
 @app.route("/editbuku", methods=["POST"])
 def editbuku():
-    update_judul = request.form.get('judul_update')
     update_deskripsi = request.form.get('deskripsi_update')
     update_harga = int(request.form.get('harga_update'))
     update_stok = int(request.form.get('stok_update'))
     update_kategori = request.form.get('kategori_update')
-    waktu = request.form.get('waktu_give')
+    judul = request.form.get('judul_give')
 
     new_doc = {
-        'JudulBuku': update_judul,
         'Deskripsi': update_deskripsi,
         'Harga': update_harga,
         'Stok': update_stok,
         'Kategori': update_kategori,
     }
-    db.barang.update_one({"URL": waktu}, {"$set": new_doc})
+    db.barang.update_one({"JudulBuku": judul}, {"$set": new_doc})
     return jsonify({'msg': 'Update Detail Berhasil!'})
 
 

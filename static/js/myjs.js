@@ -1107,7 +1107,7 @@ function edit() {
             <div class="form-group">
                 <label for="kategori">Nama Barang:</label>
                 <input type="text" id="judul" name="judul"
-                    value="${judul}">
+                    value="${judul}" disable>
             </div>
             <div class="form-group">
                 <label for="deskripsi">Deskripsi Barang:</label>
@@ -1135,112 +1135,13 @@ function edit() {
                 </select>
             </div>
             <div class="d-flex">    
-                <button onclick="check_judul_e('${judul}')" class="btn semibold btn-login mb-3">Perbarui</button>
+                <button onclick="editing()" class="btn semibold btn-login mb-3">Perbarui</button>
                 <a href="/adminpage"><button class="btn semibold btn-back ms-3">Kembali</button></a>
             </div>
         </div>
     </div>
     `;
     $('#editbuku').append(temp_html);
-}
-
-function editgambar() {
-    let judul = book_info['URL'];
-    let gambarList = $("#gambar-buku").prop("files");
-
-    // ✅ Cek apakah file kosong
-    if (!gambarList || gambarList.length === 0) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Silakan pilih gambar terlebih dahulu!',
-            showConfirmButton: false,
-            timer: 1500,
-            timerProgressBar: true
-        });
-    }
-
-    let form_data = new FormData();
-    for (let i = 0; i < gambarList.length; i++) {
-        form_data.append("gambar_give[]", gambarList[i]);
-    }
-    form_data.append("judul_give", judul);
-
-    $.ajax({
-        type: 'POST',
-        url: '/editcover',
-        data: form_data,
-        cache: false,
-        contentType: false,
-        processData: false,
-        beforeSend: () => {
-            Swal.fire({
-                title: 'Mengupload gambar...',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => Swal.showLoading()
-            });
-        },
-        success: function (response) {
-            Swal.fire({
-                toast: true,
-                position: 'top-start',
-                icon: 'success',
-                title: response["msg"] || 'Gambar berhasil diperbarui!',
-                showConfirmButton: false,
-                timer: 1500,
-                timerProgressBar: true
-            });
-            setTimeout(() => location.reload(), 1600);
-        },
-        error: function () {
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal',
-                text: 'Terjadi kesalahan saat mengupload gambar.'
-            });
-        }
-    });
-}
-
-function editing() {
-    let waktu = book_info['URL'];
-    let judul = $('#judul').val();
-    let deskripsi = $('#deskripsi').val();
-    let harga = $('#harga').val();
-    let stok = $('#stok').val();
-    let kategori = $('#kategori').val();
-
-    let form_data = new FormData();
-
-    form_data.append("judul_update", judul);
-    form_data.append("deskripsi_update", deskripsi);
-    form_data.append("harga_update", harga);
-    form_data.append("stok_update", stok);
-    form_data.append("kategori_update", kategori);
-    form_data.append("waktu_give", waktu);
-
-    $.ajax({
-        type: 'POST',
-        url: '/editbuku',
-        data: form_data,
-        cache: false,
-        contentType: false,
-        processData: false,
-        success: function (response) {
-            Swal.fire({
-                toast: true,
-                position: 'top-start',
-                icon: 'success',
-                title: response["msg"],
-                showConfirmButton: false,
-                timer: 2000,
-                timerProgressBar: true
-            });
-            location.reload();
-        }
-    });
 }
 
 // Page Favorit
@@ -1879,37 +1780,6 @@ function check_judul_t() {
     });
 }
 
-function check_judul_e(para) {
-    let judul = $('#judul').val();
-    let judulori = para
-    if (judul === judulori) {
-        editing()
-    }
-    else {
-        $.ajax({
-            type: "POST",
-            url: "/check_judul",
-            data: {
-                judul_give: judul,
-            },
-            success: function (response) {
-                if (response["exists"]) {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-start',
-                        icon: 'warning',
-                        title: 'Judul sudah digunakan',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: true
-                    });
-                } else {
-                    editing();
-                }
-            },
-        });
-    }
-}
 
 function toggleDropdown() {
     const dropdown = document.getElementById("profileDropdown");

@@ -94,6 +94,105 @@
 
     <script defer src="{{ url_for('static', filename='js/myjs.js') }}"></script>
 
+    <script>
+        function editgambar() {
+            let judul = book_info['JudulBuku'];
+            let gambarList = $("#gambar-buku").prop("files");
+
+            // ✅ Cek apakah file kosong
+            if (!gambarList || gambarList.length === 0) {
+                return Swal.fire({
+                    toast: true,
+                    position: 'top-start',
+                    icon: 'warning',
+                    title: 'Silakan pilih gambar terlebih dahulu!',
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true
+                });
+            }
+
+            let form_data = new FormData();
+            for (let i = 0; i < gambarList.length; i++) {
+                form_data.append("gambar_give[]", gambarList[i]);
+            }
+            form_data.append("judul_give", judul);
+
+            $.ajax({
+                type: 'POST',
+                url: '/editcover',
+                data: form_data,
+                cache: false,
+                contentType: false,
+                processData: false,
+                beforeSend: () => {
+                    Swal.fire({
+                        title: 'Mengupload gambar...',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                },
+                success: function (response) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-start',
+                        icon: 'success',
+                        title: response["msg"] || 'Gambar berhasil diperbarui!',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    });
+                    setTimeout(() => location.reload(), 1600);
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Terjadi kesalahan saat mengupload gambar.'
+                    });
+                }
+            });
+        }
+
+        function editing() {
+            let judul = book_info['JudulBuku'];
+            let deskripsi = $('#deskripsi').val();
+            let harga = $('#harga').val();
+            let stok = $('#stok').val();
+            let kategori = $('#kategori').val();
+
+            let form_data = new FormData();
+
+            form_data.append("deskripsi_update", deskripsi);
+            form_data.append("harga_update", harga);
+            form_data.append("stok_update", stok);
+            form_data.append("kategori_update", kategori);
+            form_data.append("judul_give", judul);
+
+            $.ajax({
+                type: 'POST',
+                url: '/editbuku',
+                data: form_data,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-start',
+                        icon: 'success',
+                        title: response["msg"],
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    location.reload();
+                }
+            });
+        }
+    </script>
+
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         AOS.init();
