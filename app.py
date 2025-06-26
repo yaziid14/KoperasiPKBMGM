@@ -507,7 +507,7 @@ def update_profile():
         alamat_receive = request.form.get("alamat_give")
 
         now = datetime.now(ZoneInfo("Asia/Jakarta"))
-        mytime = now.strftime('%Y%m%d%H%M%S')  # Gunakan format tanpa tanda hubung
+        mytime = now.strftime('%Y%m%d%H%M%S')
 
         new_doc = {
             'email': email_receive,
@@ -515,7 +515,6 @@ def update_profile():
             'alamat': alamat_receive
         }
 
-        # Simpan foto profil ke Cloudinary
         if "file_give" in request.files:
             file = request.files.get("file_give")
             filename = secure_filename(file.filename)
@@ -527,7 +526,6 @@ def update_profile():
             public_id = f"{username}_{mytime}"
 
             try:
-                # Upload ke Cloudinary
                 result = cloudinary.uploader.upload(
                     file,
                     folder="profile",
@@ -547,15 +545,15 @@ def update_profile():
                 optimized_url = result['secure_url']
                 new_doc['profile_default'] = optimized_url
 
-                # Hapus foto lama (jika ada)
+                # Hapus foto profil lama
                 user_data = db.login.find_one({"username": username})
                 old_url = user_data.get("profile_default", "")
-                if old_url and "res.cloudinary.com" in old_url:
+                if old_url and "res.cloudinary.com" in old_url and not old_url.startswith("/static/"):
                     try:
-                        # Ekstrak public_id lama
-                        parts = old_url.split("/upload/")[-1]
-                        public_id_old = parts.split(".")[0]  # tanpa ekstensi
-                        cloudinary.uploader.destroy(public_id_old)
+                        public_id_old = extract_public_id(old_url)
+                        if public_id_old:
+                            result = cloudinary.uploader.destroy(public_id_old, invalidate=True)
+                            print(f"Hapus foto profil lama: {public_id_old} → {result}")
                     except Exception as e:
                         print(f"Gagal menghapus gambar lama: {e}")
             except Exception as upload_err:
