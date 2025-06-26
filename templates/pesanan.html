@@ -46,17 +46,15 @@
         window.onload = function () {
             no_login();
             check_user();
-            showorder();
-            // Tunggu sampai model dimuat sebelum memulai deteksi
             Promise.all([
                 faceapi.nets.tinyFaceDetector.loadFromUri('/static/models'),
                 faceapi.nets.faceRecognitionNet.loadFromUri('/static/models'),
                 faceapi.nets.faceLandmark68Net.loadFromUri('/static/models')
-            ]).then(() => {
-                console.log("✅ Model face-api.js berhasil dimuat");
-            });
-
+            ]);
         };
+        $(document).ready(function () {
+            showorder();
+        });
     </script>
 
     <style>
@@ -102,9 +100,9 @@
 
     <div class="container m-top-100">
         <div class="row justify-content-center">
-            <a href="javascript:void(0)" onclick="showorder()"
-                class="text-decoration-none text-dark">
-                <h1 class="extrabold">Pesanan</h1></a>
+            <a href="javascript:void(0)" onclick="showorder()" class="text-decoration-none text-dark">
+                <h1 class="extrabold">Pesanan</h1>
+            </a>
             <p class="mt-3 text-end">
                 <a href="javascript:void(0)" onclick="showorderDibatalkan()"
                     class="text-decoration-none me-3 text-danger fw-semibold">🔴
@@ -389,6 +387,19 @@
                 Swal.fire("Error", "Kesalahan saat mengirim pesan", "error");
             }
         }
+
+        function getCookie(name) {
+            let cookieArr = document.cookie.split(";");
+            for (let i = 0; i < cookieArr.length; i++) {
+                let cookiePair = cookieArr[i].split("=");
+                if (name == cookiePair[0].trim()) {
+                    return decodeURIComponent(cookiePair[1]);
+                }
+            }
+            return null;
+        }
+
+        setInterval(loadChat, 5000);
     </script>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

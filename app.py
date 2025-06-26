@@ -71,8 +71,8 @@ def send_chat():
     mytime_str = now.strftime('%Y-%m-%d %H:%M:%S')
 
     db.livechat.insert_one({
-        'orderid': orderid,
-        'sender': username,
+        'order_id': orderid,
+        'username': username,
         'role': role,
         'message': message,
         'timestamp': mytime_str
@@ -89,13 +89,13 @@ def get_chat():
 
     order = db.orderan.find_one({'order_id': orderid})
     if not order:
-        deleted = db.livechat.delete_many({'orderid': orderid})
+        deleted = db.livechat.delete_many({'order_id': orderid})
         return jsonify({'result': 'error', 'message': f'Order tidak ditemukan. {deleted.deleted_count} chat telah dihapus.'})
 
-    chat_cursor = db.livechat.find({'orderid': orderid}).sort('timestamp', 1)
+    chat_cursor = db.livechat.find({'order_id': orderid}).sort('timestamp', 1)
     chat_list = [
         {
-            'sender': c['sender'],
+            'username': c['username'],
             'message': c['message'],
             'timestamp': c['timestamp']  # sudah dalam string format
         }
@@ -219,7 +219,7 @@ def deletebook():
     })
 
 
-@app.route('/admin')
+@app.route('/gabusmadani02!')
 def admin():
     return render_template('regisadmin.html')
 
@@ -296,6 +296,11 @@ def dbadmin():
 def hapus_user():
     username = request.form.get('username_give')
     db.login.delete_one({'username': username})
+    db.cart.delete_many({'username': username})
+    db.favorite.delete_many({'username': username})
+    db.livechat.delete_many({'username': username})
+    db.orderan.delete_many({'username': username})
+    db.pembatalan.delete_many({'username': username})
     return jsonify({'msg': f'User {username} berhasil dihapus.'})
 
 
@@ -379,12 +384,12 @@ def profile():
 
         user_info = db.login.find_one({"username": username}, {"_id": False})
 
-        # Tambahkan status verifikasi wajah dari db.descriptors
-        verifikasi = db.descriptors.find_one({"username": username})
+        # Ambil status verifikasi langsung dari db.login
         user_info["verifikasi_wajah"] = bool(
-            verifikasi and verifikasi.get("verifikasi") == True)
+            user_info.get("verifikasi") == True)
 
         return render_template("profile.html", user_info=user_info)
+
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("login"))
 
@@ -845,16 +850,27 @@ def pesanan_selesai():
 
 @app.route('/hapus-pesanan', methods=['POST'])
 def hapus_pesanan():
-    order_id = request.form.get('order_id')
+    token_receive = request.cookies.get(TOKEN_KEY)
 
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=["HS256"])
+        username = payload.get('id')  # Ambil username dari token
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return jsonify({'result': 'unauthorized', 'msg': 'Token tidak valid atau kadaluarsa'}), 401
+
+    order_id = request.form.get('order_id')
     if not order_id:
         return jsonify({'result': 'error', 'msg': 'Order ID tidak diberikan'}), 400
 
-    # Ambil semua item pesanan dengan order_id tersebut
+    # Ambil semua item pesanan berdasarkan order_id
     items = list(db.orderan.find({'order_id': order_id}))
-
     if not items:
         return jsonify({'result': 'error', 'msg': 'Pesanan tidak ditemukan'}), 404
+
+    # Pastikan username pemilik pesanan sama dengan yang login
+    pemilik = items[0].get('username')
+    if pemilik != username:
+        return jsonify({'result': 'forbidden', 'msg': 'Anda tidak berhak menghapus pesanan ini'}), 403
 
     # Kembalikan stok barang
     for item in items:
@@ -864,10 +880,17 @@ def hapus_pesanan():
             db.barang.update_one({'JudulBuku': judul}, {
                                  '$inc': {'Stok': jumlah}})
 
-    # Hapus semua dokumen pesanan dengan order_id yang sama
-    result = db.orderan.delete_many({'order_id': order_id})
+    # Hapus dari semua koleksi terkait
+    hasil_orderan = db.orderan.delete_many({'order_id': order_id})
+    hasil_pembatalan = db.pembatalan.delete_many({'order_id': order_id})
+    hasil_livechat = db.livechat.delete_many({'order_id': order_id})
 
-    return jsonify({'result': 'success', 'msg': f'Pesanan berhasil dihapus ({result.deleted_count} item), stok dikembalikan'})
+    return jsonify({
+        'result': 'success',
+        'msg': f"Pesanan dihapus ({hasil_orderan.deleted_count} item), stok dikembalikan",
+        'pembatalan_dihapus': hasil_pembatalan.deleted_count,
+        'livechat_dihapus': hasil_livechat.deleted_count
+    })
 
 
 @app.route("/batal-pembatalan", methods=["POST"])
@@ -996,16 +1019,18 @@ def search(kata):
 
 def hapus_pesanan_kadaluarsa():
     """
-    Menghapus pesanan dari koleksi 'orderan' yang berstatus 'belum bayar'
+    Menghapus pesanan dari koleksi 'orderan' yang berstatus 'Belum Bayar' atau 'Menunggu Pembayaran'
     dan dibuat lebih dari 1 hari yang lalu, serta mengembalikan stoknya ke koleksi 'barang'.
     """
     try:
-        batas_waktu = datetime.now(
-            ZoneInfo("Asia/Jakarta")) - timedelta(days=1)
+        batas_waktu = datetime.now(ZoneInfo("Asia/Jakarta")) - timedelta(days=1)
+
+        # Daftar status yang dianggap kadaluarsa
+        status_kadaluarsa = ["Belum Bayar", "Menunggu Pembayaran"]
 
         # Cari semua pesanan kadaluarsa
         pesanan_kadaluarsa = list(db.orderan.find({
-            "status": "belum bayar",
+            "status": {"$in": status_kadaluarsa},
             "waktu": {"$lt": batas_waktu}
         }))
 
@@ -1014,16 +1039,19 @@ def hapus_pesanan_kadaluarsa():
             judul = item.get('judul')
             jumlah = int(item.get('jumlah', 0))
             if judul and jumlah > 0:
-                db.barang.update_one({'JudulBuku': judul}, {
-                                     '$inc': {'Stok': jumlah}})
+                db.barang.update_one(
+                    {'JudulBuku': judul},
+                    {'$inc': {'Stok': jumlah}}
+                )
 
         # Hapus pesanan kadaluarsa
         hasil = db.orderan.delete_many({
-            "status": "belum bayar",
+            "status": {"$in": status_kadaluarsa},
             "waktu": {"$lt": batas_waktu}
         })
 
-        print(f"{hasil.deleted_count} pesanan kadaluarsa berstatus 'belum bayar' telah dihapus dan stok dikembalikan.")
+        print(f"{hasil.deleted_count} pesanan kadaluarsa telah dihapus dan stok dikembalikan.")
+
     except Exception as e:
         print(f"Terjadi kesalahan saat menghapus pesanan kadaluarsa: {e}")
 
@@ -1061,7 +1089,7 @@ def simpan_wajah():
                 os.remove(os.path.join(save_dir, old_file))
 
         # Simpan status verifikasi ke MongoDB
-        db.descriptors.update_one(
+        db.login.update_one(
             {"username": username},
             {"$set": {
                 "username": username,
@@ -1074,6 +1102,21 @@ def simpan_wajah():
 
     except Exception as e:
         return jsonify({"result": "error", "msg": f"Gagal menyimpan descriptor: {str(e)}"}), 500
+
+
+@app.route("/api/verifikasi-wajah", methods=["GET"])
+def api_verifikasi_wajah():
+    token_receive = request.cookies.get(TOKEN_KEY)
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=["HS256"])
+        username = payload.get("id")
+        user = db.login.find_one({"username": username})
+
+        return jsonify({
+            "verifikasi_wajah": bool(user and user.get("verifikasi") == True)
+        })
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return jsonify({"verifikasi_wajah": False}), 401
 
 
 @app.route('/verifikasi-wajah', methods=['POST'])

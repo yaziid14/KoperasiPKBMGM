@@ -45,14 +45,11 @@
             no_login();
             check_user();
             profile();
-            // Tunggu sampai model dimuat sebelum memulai deteksi
             Promise.all([
                 faceapi.nets.tinyFaceDetector.loadFromUri('/static/models'),
                 faceapi.nets.faceRecognitionNet.loadFromUri('/static/models'),
                 faceapi.nets.faceLandmark68Net.loadFromUri('/static/models')
-            ]).then(() => {
-                console.log("✅ Model face-api.js berhasil dimuat");
-            });
+            ]);
         };
     </script>
 </head>

@@ -200,7 +200,7 @@ function favorite(para) {
                         icon: 'info',
                         title: 'Terhapus dari favorite',
                         showConfirmButton: false,
-                        timer: 2000,
+                        timer: 1000,
                         timerProgressBar: true
                     }).then(() => {
                         // Jika user sedang di halaman /favorite, reload list favorit
@@ -281,7 +281,7 @@ function keranjang(para) {
                         icon: 'info',
                         title: 'Terhapus dari keranjang',
                         showConfirmButton: false,
-                        timer: 2000,
+                        timer: 1000,
                         timerProgressBar: true
                     });
                 } else {
@@ -353,41 +353,50 @@ function cari() {
 }
 
 function deleteadm(para) {
-    let judul = $(para).text();
-    if (confirm(`Apakah anda ingin menghapus '${judul}'?`)) {
-        $.ajax({
-            type: 'POST',
-            url: '/deletebook',
-            data: {
-                judul_give: judul
-            },
-            success: function (response) {
-                if (response.result === 'success') {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-start',
-                        icon: 'success',
-                        title: response["msg"],
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: true
-                    });
-                    tampil_admin();
-                } else {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-start',
-                        icon: 'error',
-                        title: 'Ada yang salah',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: true
-                    });
+    let judul = $(para).data('judul');
+
+    Swal.fire({
+        title: `Hapus Barang?`,
+        text: `Apakah Anda yakin ingin menghapus "${judul}"?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: 'POST',
+                url: '/deletebook',
+                data: { judul_give: judul },
+                success: function (response) {
+                    if (response.result === 'success') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-start',
+                            icon: 'success',
+                            title: response.msg,
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+                        location.reload(); // Refresh
+                    } else {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-start',
+                            icon: 'error',
+                            title: 'Gagal menghapus',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+                    }
                 }
-            }
-        });
-    }
-    return false;
+            });
+        }
+    });
 }
 
 // Page Admin
@@ -480,9 +489,9 @@ function tampil_admin() {
                             <h6>Stok : ${stok}</h6>
                             <h5 class="regular harga">Rp.${harga.toLocaleString('id-ID')}</h5>
                         </div>
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-center">
                             <a href="/edit/${url}" class="btn semibold card-admin-btn" style="background-color: #0A868C;">Edit</a>
-                            <button onclick="deleteadm('#${url}')" class="btn semibold card-admin-btn ms-3" style="background-color: #D60000;" id="delete">Delete</button>
+                            <button onclick="deleteadm(this)" class="btn semibold card-admin-btn ms-4" style="background-color: #D60000;" data-judul="${judul}">Delete</button>
                         </div>
                     </div>
                 </div>`;
@@ -710,43 +719,116 @@ function showcart() {
 
             let grid_wrapper = `<div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">${all_html}</div>`;
 
-            if (rows.length > 0) {
-                checkout_button = `
-                    <div class="text-center mt-5">
-                        <button type="button" class="btn btn-lg bold btn-checkout" onclick="sebelumco()">Check Out</button>
-                    </div>`;
-            }
+            // if (rows.length > 0) {
+            //     checkout_button = `
+            //         <div class="text-center mt-5">
+            //             <button type="button" class="btn btn-lg bold btn-checkout" onclick="sebelumco()">Check Out</button>
+            //         </div>`;
+            // }
 
-            $('#keranjang1').html(grid_wrapper + checkout_button);
+            $('#keranjang1').html(grid_wrapper);
         }
     });
 }
 
 function sebelumco() {
     let dataPesanan = [];
+    let pilihanHTML = '';
+
     $("[id^='harga-']").each(function (index) {
         let hargaText = $(this).text();
         let harga = Number(hargaText.replace(/\D/g, ''));
         let jumlah = Number($(`#jumlah-${index}`).text());
-        let judul1 = $(`#judul-${index}`).text().trim();
+        let judul = $(`#judul-${index}`).text().trim();
 
         if (jumlah > 0 && harga > 0) {
-            dataPesanan.push({ judul: judul1, jumlah: jumlah, harga: harga });
+            let idCheckbox = `item-${index}`;
+            dataPesanan.push({
+                id: idCheckbox,
+                judul,
+                jumlah,
+                harga
+            });
+
+            // ❗ Otomatis dicentang dengan "checked" di HTML
+            pilihanHTML += `
+                <div class="form-check text-start">
+                    <input class="form-check-input item-checkbox" type="checkbox" value="${index}" id="${idCheckbox}" checked>
+                    <label class="form-check-label" for="${idCheckbox}">
+                        ${judul} (x${jumlah}) - Rp ${harga.toLocaleString('id-ID')}
+                    </label>
+                </div>
+            `;
         }
     });
 
     if (dataPesanan.length === 0) {
-        Swal.fire({
+        return Swal.fire({
             icon: 'error',
             title: 'Gagal!',
             text: 'Tidak ada item yang dipilih',
             confirmButtonColor: '#625f5f',
             confirmButtonText: 'OK'
         });
-        return;
     }
-    check_out(dataPesanan);
+
+    Swal.fire({
+        title: 'Pilih pesanan untuk checkout',
+        html: `
+            <div class="mb-3 text-start">
+                <input type="checkbox" id="select-all" class="form-check-input me-2" checked>
+                <label for="select-all" class="form-check-label fw-bold">Pilih Semua</label>
+            </div>
+            <form id="form-pilihan">${pilihanHTML}</form>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Checkout',
+        cancelButtonText: 'Batal',
+        didOpen: () => {
+            const selectAll = document.getElementById('select-all');
+            const checkboxes = document.querySelectorAll('.item-checkbox');
+
+            // Handle toggle semua checkbox
+            selectAll.addEventListener('change', () => {
+                checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            });
+
+            // Jika user uncheck salah satu, uncheck "Pilih Semua"
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    if (!cb.checked) {
+                        selectAll.checked = false;
+                    } else if ([...checkboxes].every(c => c.checked)) {
+                        selectAll.checked = true;
+                    }
+                });
+            });
+        },
+        preConfirm: () => {
+            let terpilih = [];
+            dataPesanan.forEach(item => {
+                if (document.getElementById(item.id).checked) {
+                    terpilih.push({
+                        judul: item.judul,
+                        jumlah: item.jumlah,
+                        harga: item.harga
+                    });
+                }
+            });
+
+            if (terpilih.length === 0) {
+                Swal.showValidationMessage('Pilih setidaknya satu item');
+            }
+
+            return terpilih;
+        }
+    }).then((result) => {
+        if (result.isConfirmed && result.value.length > 0) {
+            check_out(result.value);
+        }
+    });
 }
+
 
 function check_out(para) {
     let username = $.cookie('username');
@@ -768,10 +850,10 @@ function check_out(para) {
                     icon: 'success',
                     title: response["msg"],
                     showConfirmButton: false,
-                    timer: 2000,
+                    timer: 1000,
                     timerProgressBar: true
                 });
-                showcart();
+                window.location.replace("/orders");
             } else {
                 Swal.fire({
                     toast: true,
@@ -779,7 +861,7 @@ function check_out(para) {
                     icon: 'error',
                     title: 'Ada yang salah',
                     showConfirmButton: false,
-                    timer: 2000,
+                    timer: 1000,
                     timerProgressBar: true
                 });
             }
@@ -1065,14 +1147,16 @@ function edit() {
 function editgambar() {
     let waktu = book_info['Date'];
     let gambarList = $("#gambar-buku").prop("files");
-    if (!gambarList) {
+
+    // ✅ Cek apakah file kosong
+    if (!gambarList || gambarList.length === 0) {
         return Swal.fire({
             toast: true,
             position: 'top-start',
             icon: 'warning',
-            title: 'Silahkan input gambar!',
+            title: 'Silakan pilih gambar terlebih dahulu!',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1500,
             timerProgressBar: true
         });
     }
@@ -1082,6 +1166,7 @@ function editgambar() {
         form_data.append("gambar_give[]", gambarList[i]);
     }
     form_data.append("waktu_give", waktu);
+
     $.ajax({
         type: 'POST',
         url: '/editcover',
@@ -1089,17 +1174,32 @@ function editgambar() {
         cache: false,
         contentType: false,
         processData: false,
+        beforeSend: () => {
+            Swal.fire({
+                title: 'Mengupload gambar...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => Swal.showLoading()
+            });
+        },
         success: function (response) {
             Swal.fire({
                 toast: true,
                 position: 'top-start',
                 icon: 'success',
-                title: response["msg"],
+                title: response["msg"] || 'Gambar berhasil diperbarui!',
                 showConfirmButton: false,
-                timer: 2000,
+                timer: 1500,
                 timerProgressBar: true
             });
-            edit();
+            setTimeout(() => location.reload(), 1600);
+        },
+        error: function () {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: 'Terjadi kesalahan saat mengupload gambar.'
+            });
         }
     });
 }
@@ -1138,7 +1238,7 @@ function editing() {
                 timer: 2000,
                 timerProgressBar: true
             });
-            window.location.reload();
+            location.reload();
         }
     });
 }
@@ -1356,8 +1456,6 @@ function update_profile() {
     let email = $("#inputEmail").val();
     let nomor = $('#inputNomor').val();
     let alamat = $("#inputAlamat").val();
-    let faceCanvas = document.getElementById("face-capture"); // ← Canvas hasil capture wajah
-    // let face_base64 = faceCanvas ? faceCanvas.toDataURL("image/jpeg") : null;
 
     if (!email || !nomor || !alamat) {
         return Swal.fire({
@@ -1373,7 +1471,6 @@ function update_profile() {
 
     let form_data = new FormData();
     if (file) form_data.append("file_give", file);
-    // if (face_base64) form_data.append("face_base64", face_base64);  // ← kirim base64 sebagai string
     form_data.append("email_give", email);
     form_data.append("nomor_give", nomor);
     form_data.append("alamat_give", alamat);
@@ -1393,7 +1490,7 @@ function update_profile() {
                     icon: 'success',
                     title: response.msg,
                     showConfirmButton: false,
-                    timer: 2000,
+                    timer: 1000,
                     timerProgressBar: true
                 });
                 window.location.reload();
@@ -1404,7 +1501,7 @@ function update_profile() {
 
 // Page Regis Admin
 function masukadmin() {
-    let username = $('#inputUsername').val();
+    let username = $('#inputUsername').val().trim();
     if (!username) {
         return Swal.fire({
             toast: true,
@@ -1412,46 +1509,51 @@ function masukadmin() {
             icon: 'warning',
             title: 'Silahkan isi username anda',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1000,
             timerProgressBar: true
         });
     }
 
-    let password = $('#inputPassword').val();
-    if (!password) {
+    let password = $('#inputPassword').val().trim();
+    if (password.length < 8) {
         return Swal.fire({
             toast: true,
             position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan isi password anda',
+            icon: 'error',
+            title: 'Password minimal 8 karakter',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1500,
             timerProgressBar: true
         });
     }
 
-    let email = $('#inputEmail').val();
-    if (!email) {
+
+    let email = $('#inputEmail').val().trim();
+    let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
         return Swal.fire({
             toast: true,
             position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan isi email',
+            icon: 'error',
+            title: 'Format email tidak valid',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1000,
             timerProgressBar: true
         });
     }
 
-    let nomor = $('#inputNomor').val();
-    if (!nomor) {
+    let nomor = $('#inputNomor').val().trim();
+    let nomorRegex = /^[0-9]{9,15}$/;
+
+    if (!nomorRegex.test(nomor)) {
         return Swal.fire({
             toast: true,
             position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan isi nomor handphone',
+            icon: 'error',
+            title: 'Nomor handphone tidak valid (9-15 digit angka)',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1500,
             timerProgressBar: true
         });
     }
@@ -1464,7 +1566,7 @@ function masukadmin() {
             icon: 'warning',
             title: 'Silahkan cek ID terlebih dahulu',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1000,
             timerProgressBar: true
         });
     } else if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-xmark")) {
@@ -1472,9 +1574,9 @@ function masukadmin() {
             toast: true,
             position: 'top-start',
             icon: 'warning',
-            title: 'Username tidak tersedia. Gunakan ID lain.',
+            title: 'Username sudah digunakan. Gunakan username lain.',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1000,
             timerProgressBar: true
         });
     }
@@ -1495,7 +1597,7 @@ function masukadmin() {
                 icon: 'success',
                 title: 'Kamu telah mendaftar sebagai Admin, terima kasih',
                 showConfirmButton: false,
-                timer: 2000,
+                timer: 1000,
                 timerProgressBar: true
             });
             window.location.replace("/login");
@@ -1562,11 +1664,9 @@ function profile() {
     $('#editprofile').empty().append(temp_html); // pastikan bersihkan sebelum append
 }
 
-
-
 // Page Regis User
 function masuk() {
-    let username = $('#inputUsername').val();
+    let username = $('#inputUsername').val().trim();
     if (!username) {
         return Swal.fire({
             toast: true,
@@ -1574,33 +1674,35 @@ function masuk() {
             icon: 'warning',
             title: 'Silahkan isi username anda',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1000,
             timerProgressBar: true
         });
     }
 
-    let password = $('#inputPassword').val();
-    if (!password) {
+    let password = $('#inputPassword').val().trim();
+    if (password.length < 8) {
         return Swal.fire({
             toast: true,
             position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan isi password anda',
+            icon: 'error',
+            title: 'Password minimal 8 karakter',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1500,
             timerProgressBar: true
         });
     }
 
-    let email = $('#inputEmail').val();
-    if (!email) {
+    let email = $('#inputEmail').val().trim();
+    let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
         return Swal.fire({
             toast: true,
             position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan isi email anda',
+            icon: 'error',
+            title: 'Format email tidak valid',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1000,
             timerProgressBar: true
         });
     }
@@ -1613,7 +1715,7 @@ function masuk() {
             icon: 'warning',
             title: 'Silahkan cek ID anda terlebih dahulu',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1000,
             timerProgressBar: true
         });
     } else if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-xmark")) {
@@ -1623,7 +1725,7 @@ function masuk() {
             icon: 'warning',
             title: 'Cek kembali ID anda..',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1000,
             timerProgressBar: true
         });
     }
@@ -1643,7 +1745,7 @@ function masuk() {
                 icon: 'success',
                 title: 'Kamu telah mendaftar sebagai User, terima kasih..',
                 showConfirmButton: false,
-                timer: 2000,
+                timer: 1000,
                 timerProgressBar: true
             });
             window.location.replace("/login");
@@ -1668,87 +1770,41 @@ function rolesearch() {
     }
 }
 
-// Page Tambah Buku
 function postbook() {
-    let judul = $('#judul').val();
-    if (!judul) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan isi nama barang',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true
-        });
-    }
-    let deskripsi = $('#deskripsi').val();
-    if (!deskripsi) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan isi deskripsi barang',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true
-        });
-    }
-    let harga = $('#harga').val();
-    if (!harga) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan isi harga barang',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true
-        });
-    }
-    let stok = $('#stok').val();
-    if (!stok) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan isi stok barang',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true
-        });
-    }
-    let kategori = $('#kategori').val();
-    if (!kategori) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan isi kategori barang',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true
-        });
-    }
-    let gambarList = $("#gambar-buku").prop("files");
-    if (gambarList.length === 0) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan input gambar barang',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true
-        });
-    }
+    const judul = $('#judul').val().trim();
+    const deskripsi = $('#deskripsi').val().trim();
+    const harga = $('#harga').val().trim();
+    const stok = $('#stok').val().trim();
+    const kategori = $('#kategori').val();
+    const gambarList = $("#gambar-buku").prop("files");
 
-    let url = judul.replaceAll(/[^0-9a-zA-Z -]/g, '').toLowerCase();
-    let url1 = url.replaceAll(' ', '-');
+    const showToast = (msg) => {
+        Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: msg,
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
+        });
+    };
+
+    if (!judul) return showToast('Silahkan isi nama barang');
+    if (!deskripsi) return showToast('Silahkan isi deskripsi barang');
+    if (!harga) return showToast('Silahkan isi harga barang');
+    if (!stok) return showToast('Silahkan isi stok barang');
+    if (!kategori) return showToast('Silahkan pilih kategori barang');
+    if (gambarList.length === 0) return showToast('Silahkan input gambar barang');
+
+    // Normalize judul ke slug URL (contoh: "Buku Tulis 123" => "buku-tulis-123")
+    let url = judul
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')     // hapus karakter non-alfanumerik
+        .replace(/\s+/g, '-')             // ganti spasi jadi -
+        .replace(/-+/g, '-');             // hapus duplikat tanda -
 
     let form_data = new FormData();
-
-    // Tambahkan semua file gambar ke FormData
     for (let i = 0; i < gambarList.length; i++) {
         form_data.append("gambar_give[]", gambarList[i]);
     }
@@ -1758,7 +1814,7 @@ function postbook() {
     form_data.append("harga_give", harga);
     form_data.append("stok_give", stok);
     form_data.append("kategori_give", kategori);
-    form_data.append("url_give", url1);
+    form_data.append("url_give", url);
 
     $.ajax({
         type: 'POST',
@@ -1767,17 +1823,32 @@ function postbook() {
         cache: false,
         contentType: false,
         processData: false,
+        beforeSend: () => {
+            Swal.fire({
+                title: 'Menyimpan...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => Swal.showLoading()
+            });
+        },
         success: function (response) {
             Swal.fire({
                 toast: true,
                 position: 'top-start',
                 icon: 'success',
-                title: response["msg"],
+                title: response["msg"] || 'Barang berhasil ditambahkan!',
                 showConfirmButton: false,
-                timer: 2000,
+                timer: 1500,
                 timerProgressBar: true
             });
-            window.location.href = '/adminpage';
+            setTimeout(() => window.location.href = '/adminpage', 1600);
+        },
+        error: function () {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops!',
+                text: 'Terjadi kesalahan saat menyimpan barang.'
+            });
         }
     });
 }
@@ -1867,9 +1938,9 @@ function formatTanggal(datetimeStr) {
 
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
+    // const seconds = String(date.getSeconds()).padStart(2, '0');
 
-    return `${day} ${month} ${year} | ${hours}:${minutes}:${seconds}`;
+    return `${day} ${month} ${year} | ${hours}:${minutes}`;
 }
 
 function showorder() {
@@ -1878,7 +1949,15 @@ function showorder() {
         url: '/showorder',
         success: function (response) {
             let rows = response['daftarorderan'];
-            if (!rows || rows.length === 0) return;
+            if (!rows || rows.length === 0) {
+                $('#showoderan').html(`
+                    <div class="text-center text-muted my-5 fade-in-animation">
+                        <i class="fa-solid fa-box-open fa-3x mb-3"></i><br>
+                        <h5>Belum ada orderan</h5>
+                    </div>
+                `);
+                return;
+            }
 
             $('#showoderan').empty();
 
@@ -1952,7 +2031,15 @@ function showorder() {
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <strong>Status:</strong>
-                                        <span class="${status === 'dibatalkan' ? 'text-danger' : 'text-success'}">${item.status}</span>
+                                        <span class="${status === 'dibatalkan' ? 'text-danger' :
+                            status === 'belum bayar' ? 'text-warning' :
+                                status === 'sudah bayar' ? 'text-info' :
+                                    status === 'menunggu pembayaran' ? 'text-primary' :
+                                        status === 'terkirim' ? 'text-success' :
+                                            status === 'pesanan selesai' ? 'text-muted' :
+                                                'text-secondary'}">
+                                            ${item.status}
+                                        </span>
                                     </li>
                                 </ul>
                             </div>
@@ -1977,7 +2064,7 @@ function showorder() {
                 if (status === 'belum bayar') {
                     tombolAksi = `
                         <div class="d-flex justify-content-center gap-2 mt-3">
-                            <button class="btn btn-outline-danger" type="button" onclick="pembayaran('${id}', '${waktu}')">Bayar</button>
+                            <button class="btn btn-outline-danger" type="button" onclick="cekVerifikasiWajah('${id}', '${waktu}')">Bayar</button>
                             <button class="btn btn-outline-secondary" type="button" onclick="hapusPesanan('${id}')">🗑️ Hapus Pesanan</button>
                         </div>
                     `;
@@ -2012,13 +2099,42 @@ function showorder() {
 
                 $('#showoderan').append(temp_html);
 
-                if (status === 'belum bayar') {
+                if (status === 'belum bayar' || status === 'menunggu pembayaran') {
                     startCountdown(id, waktu);
                 }
             }
         },
         error: function () {
             Swal.fire("Error", "Gagal mengambil data pesanan dari server", "error");
+        }
+    });
+}
+
+function cekVerifikasiWajah(orderid, tanggal) {
+    $.ajax({
+        type: "GET",
+        url: "/api/verifikasi-wajah",
+        success: function (response) {
+            if (response["verifikasi_wajah"] === true) {
+                // Sudah verifikasi, lanjut ke pembayaran
+                verifikasiSebelumBayar(orderid, tanggal);
+            } else {
+                // Belum verifikasi, arahkan ke halaman profile
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Verifikasi Wajah Diperlukan',
+                    text: 'Silakan verifikasi wajah terlebih dahulu sebelum melakukan pembayaran.',
+                    confirmButtonText: 'Ke Profil',
+                    allowOutsideClick: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "/profile";
+                    }
+                });
+            }
+        },
+        error: function () {
+            Swal.fire("Gagal", "Gagal memeriksa status verifikasi wajah", "error");
         }
     });
 }
@@ -2086,20 +2202,6 @@ function formatTime(timestampStr) {
         return `${day}/${month}/${year}, ${hour}:${minute}`;
     }
 }
-
-function getCookie(name) {
-    let cookieArr = document.cookie.split(";");
-    for (let i = 0; i < cookieArr.length; i++) {
-        let cookiePair = cookieArr[i].split("=");
-        if (name == cookiePair[0].trim()) {
-            return decodeURIComponent(cookiePair[1]);
-        }
-    }
-    return null;
-}
-
-setInterval(loadChat, 5000);
-
 
 function batalkanPesanan(id) {
     let username = $.cookie("username");
@@ -2338,7 +2440,6 @@ function startCountdown(id, orderTime) {
             $(`#countdown-${id}`).text('Expired');
             $(`#order-card-${id}`).remove();
 
-            // ✅ AJAX pakai form-data (bukan JSON)
             $.ajax({
                 type: 'POST',
                 url: '/hapus-pesanan',
@@ -2615,6 +2716,7 @@ function hapusUser(username) {
                     timerProgressBar: true
                 });
                 $('#userModal').modal('hide');
+                location.reload();
             });
         }
     });
@@ -2738,11 +2840,14 @@ function showorderDibatalkan() {
                 return dateB - dateA;
             }).reverse();
 
+            let ditemukanDibatalkan = false;
+
             for (let [key, group] of sortedGroups) {
                 let { order_id: id, tanggal: waktu } = group[0];
                 let status = group[0].status.toLowerCase();
 
                 if (status !== 'dibatalkan') continue;
+                ditemukanDibatalkan = true;
 
                 let totalSemua = 0;
                 let jumlahSemua = 0;
@@ -2750,7 +2855,6 @@ function showorderDibatalkan() {
                 let itemHTML = group.map((item, idx) => {
                     let jumlah = parseInt(item.jumlah);
                     let harga = parseInt(item.harga);
-
                     totalSemua += harga;
                     jumlahSemua += jumlah;
 
@@ -2820,6 +2924,14 @@ function showorderDibatalkan() {
 
                 $('#showoderan').append(temp_html);
             }
+
+            if (!ditemukanDibatalkan) {
+                $('#showoderan').html(`
+                    <div class="text-center py-5">
+                        <h4 class="text-muted">Tidak ada pesanan yang dibatalkan</h4>
+                    </div>
+                `);
+            }
         },
         error: function () {
             Swal.fire("Error", "Gagal mengambil data pesanan dari server", "error");
@@ -2850,11 +2962,14 @@ function showorderSelesai() {
                 return dateB - dateA;
             }).reverse();
 
+            let ditemukanSelesai = false;
+
             for (let [key, group] of sortedGroups) {
                 let { order_id: id, tanggal: waktu } = group[0];
                 let status = group[0].status.toLowerCase();
 
                 if (status !== 'pesanan selesai') continue;
+                ditemukanSelesai = true;
 
                 let totalSemua = 0;
                 let jumlahSemua = 0;
@@ -2931,6 +3046,14 @@ function showorderSelesai() {
                 `;
 
                 $('#showoderan').append(temp_html);
+            }
+
+            if (!ditemukanSelesai) {
+                $('#showoderan').html(`
+                    <div class="text-center py-5">
+                        <h4 class="text-muted">Belum ada pesanan selesai</h4>
+                    </div>
+                `);
             }
         },
         error: function () {

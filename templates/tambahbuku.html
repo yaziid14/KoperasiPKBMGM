@@ -37,11 +37,48 @@
 
     <title>KoperasiGM - Tambah Item</title>
     <script>
-        $(document).ready(function () {
+        window.onload = function () {
+            no_login();
             check_admin();
+        };
+        $(document).ready(function () {
+            $('#gambar-buku').on('change', function () {
+                const container = $('#previewContainer');
+                container.empty();
+                const files = Array.from(this.files);
+
+                files.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const wrapper = $('<div class="preview-img-wrapper" data-index="' + index + '"></div>');
+                        const img = $('<img class="preview-img">').attr('src', e.target.result);
+                        wrapper.append(img);
+                        container.append(wrapper);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
         });
+
     </script>
     <style>
+        #form-tambah-barang input,
+        #form-tambah-barang select,
+        #form-tambah-barang textarea {
+            border-radius: 0.75rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+        }
+
+        #previewContainer img {
+            border-radius: 8px;
+            object-fit: cover;
+            width: 100px;
+            height: 100px;
+        }
+
         .preview-img-wrapper {
             position: relative;
             display: inline-block;
@@ -61,16 +98,11 @@
             object-fit: cover;
             display: block;
         }
-
-        /* Hapus tombol silang, tidak dibutuhkan */
-        .remove-img-btn {
-            display: none;
-        }
     </style>
 </head>
 
 <body>
-    <nav class="navbar fixed-top navbar-expand bg-nav">
+    <nav class="navbar navbar-expand bg-nav">
         <div class="container-fluid">
             <a class="navbar-brand" href="#" onclick="check_role()">
                 <img src="{{ url_for('static', filename='logo2.jpg') }}" alt="Logo" height="55" width="200">
@@ -91,51 +123,58 @@
         </div>
     </nav>
 
-    <div class="buku-baru">
-        <div class="container add">
-            <div class="card px-5 py-3">
-                <h1 class="bold mt-2" style="text-align: center;">TAMBAH BARANG BARU</h1>
-                <hr>
-                <div class="form-group d-flex ms-4">
-                    <label for="judul">Nama Barang:</label>&emsp;&emsp;&emsp;
-                    <input class="me-4" type="text" id="judul" name="judul">
-                </div>
-                <div class="form-group d-flex ms-4">
-                    <label for="deskripsi">Deskripsi Barang:</label>&emsp;&emsp;
-                    <textarea class="me-4" id="deskripsi" name="deskripsi" rows="4"></textarea>
-                </div>
-                <div class="form-group d-flex ms-4">
-                    <label for="harga">Harga Barang:</label>&emsp;&emsp;&emsp;
-                    <input class="me-4" type="number" id="harga" name="harga">
-                </div>
-                <div class="form-group d-flex ms-4">
-                    <label for="stok">Stok Barang:</label>&emsp;&emsp;&emsp;
-                    <input class="me-4" type="number" id="stok" name="stok">
-                </div>
-                <div class="form-group d-flex ms-4">
-                    <label for="kategori">Kategori Barang:</label>&emsp;&emsp;
-                    <select class="me-4" id="kategori" name="kategori">
-                        <option value="ATK">ATK</option>
-                        <option value="Makanan">Makanan</option>
-                        <option value="Minuman">Minuman</option>
-                        <option value="Seragam">Seragam</option>
-                        <option value="Alat Multimedia">Alat Multimedia</option>
-                        <option value="Lainnya">Lainnya</option>
-                    </select>
-                </div>
-                <div class="form-group row mb-3 ms-4">
-                    <label for="gambar-buku" class="col-form-label fw-semibold col-sm-3">Gambar Barang:</label>
-                    <div class="col-sm-9">
+    <div class="container my-5">
+        <div class="card shadow-lg p-4 border-0 rounded-4">
+            <h2 class="text-center fw-bold mb-4">Tambah Barang Baru</h2>
+            <form id="form-tambah-barang">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="judul" class="form-label">Nama Barang</label>
+                        <input type="text" class="form-control" id="judul" name="judul"
+                            placeholder="Contoh: Pulpen Biru">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="harga" class="form-label">Harga Barang</label>
+                        <input type="number" class="form-control" id="harga" name="harga" placeholder="Contoh: 5000">
+                    </div>
+                    <div class="col-12">
+                        <label for="deskripsi" class="form-label">Deskripsi Barang</label>
+                        <textarea class="form-control" id="deskripsi" name="deskripsi" rows="3"
+                            placeholder="Tuliskan deskripsi barang..."></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="stok" class="form-label">Stok Barang</label>
+                        <input type="number" class="form-control" id="stok" name="stok" placeholder="Contoh: 20">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="kategori" class="form-label">Kategori Barang</label>
+                        <select id="kategori" name="kategori" class="form-select">
+                            <option selected disabled>Pilih kategori...</option>
+                            <option value="ATK">ATK</option>
+                            <option value="Makanan">Makanan</option>
+                            <option value="Minuman">Minuman</option>
+                            <option value="Seragam">Seragam</option>
+                            <option value="Alat Multimedia">Alat Multimedia</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label for="gambar-buku" class="form-label">Gambar Barang</label>
                         <input class="form-control" type="file" id="gambar-buku" name="gambar-buku" multiple
                             accept="image/*">
                         <div id="previewContainer" class="d-flex flex-wrap gap-3 mt-3"></div>
                     </div>
                 </div>
-                <div class="d-flex justify-content-center my-4">
-                    <button onclick="check_judul_t()" class="btn semibold btn-login py-2 me-5">Tambah</button>
-                    <a href="/adminpage"><button class="btn semibold btn-back">Batal</button></a>
+
+                <div class="d-flex justify-content-center mt-5 gap-3">
+                    <button type="button" onclick="check_judul_t()" class="btn btn-success px-4">
+                        <i class="fa-solid fa-circle-plus me-2"></i>Tambah
+                    </button>
+                    <a href="/adminpage" class="btn btn-outline-danger px-4">
+                        <i class="fa-solid fa-xmark me-2"></i>Batal
+                    </a>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -159,35 +198,6 @@
     </div>
 
     <script defer src="{{ url_for('static', filename='js/myjs.js') }}"></script>
-
-    <script>
-        let selectedFiles = [];
-
-        document.getElementById("gambar-buku").addEventListener("change", function () {
-            const container = document.getElementById("previewContainer");
-            container.innerHTML = "";
-            selectedFiles = Array.from(this.files);
-
-            selectedFiles.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const wrapper = document.createElement("div");
-                    wrapper.className = "preview-img-wrapper";
-                    wrapper.setAttribute("data-index", index);
-
-                    const img = document.createElement("img");
-                    img.src = e.target.result;
-                    img.className = "preview-img";
-
-                    // Tidak ada tombol silang di sini
-                    wrapper.appendChild(img);
-                    container.appendChild(wrapper);
-                };
-                reader.readAsDataURL(file);
-            });
-        });
-    </script>
-
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
