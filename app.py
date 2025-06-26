@@ -1034,14 +1034,14 @@ def editbook(book):
 
 @app.route("/editcover", methods=["POST"])
 def editcover():
-    waktu = request.form.get('waktu_give')
-    date = db.barang.find_one({"Date": waktu}, {"_id": False})
+    barang = request.form.get('judul_give')
+    databarang = db.barang.find_one({"URL": barang}, {"_id": False})
 
-    if not date:
+    if not databarang:
         return jsonify({'msg': 'Data tidak ditemukan!'})
 
     # Dapatkan daftar cover lama
-    cover_old_list = date.get("AllCover", [])
+    cover_old_list = databarang.get("AllCover", [])
     if isinstance(cover_old_list, str):
         cover_old_list = [cover_old_list]
 
@@ -1062,7 +1062,7 @@ def editcover():
         return jsonify({'msg': 'Gambar tidak ditemukan!'})
 
     cover_list = []
-    url_receive = date["URL"]
+    url_receive = databarang["URL"]
 
     for index, file in enumerate(files):
         filename = secure_filename(file.filename)
@@ -1094,7 +1094,7 @@ def editcover():
         "Cover": cover_list[0]  # thumbnail = gambar pertama
     }
 
-    db.barang.update_one({"Date": waktu}, {"$set": new_doc})
+    db.barang.update_one({"URL": barang}, {"$set": new_doc})
     return jsonify({'msg': 'Update Cover Berhasil!'})
 
 
@@ -1114,7 +1114,7 @@ def editbuku():
         'Stok': update_stok,
         'Kategori': update_kategori,
     }
-    db.barang.update_one({"Date": waktu}, {"$set": new_doc})
+    db.barang.update_one({"URL": waktu}, {"$set": new_doc})
     return jsonify({'msg': 'Update Detail Berhasil!'})
 
 

@@ -1145,7 +1145,7 @@ function edit() {
 }
 
 function editgambar() {
-    let waktu = book_info['Date'];
+    let judul = book_info['URL'];
     let gambarList = $("#gambar-buku").prop("files");
 
     // ✅ Cek apakah file kosong
@@ -1165,7 +1165,7 @@ function editgambar() {
     for (let i = 0; i < gambarList.length; i++) {
         form_data.append("gambar_give[]", gambarList[i]);
     }
-    form_data.append("waktu_give", waktu);
+    form_data.append("judul_give", judul);
 
     $.ajax({
         type: 'POST',
@@ -1205,7 +1205,7 @@ function editgambar() {
 }
 
 function editing() {
-    let waktu = book_info['Date'];
+    let waktu = book_info['URL'];
     let judul = $('#judul').val();
     let deskripsi = $('#deskripsi').val();
     let harga = $('#harga').val();
