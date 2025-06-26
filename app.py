@@ -1038,23 +1038,23 @@ def editcover():
     if not date:
         return jsonify({'msg': 'Data tidak ditemukan!'})
 
-    # Dapatkan daftar gambar lama
+    # Dapatkan daftar cover lama
     cover_old_list = date.get("AllCover", [])
     if isinstance(cover_old_list, str):
         cover_old_list = [cover_old_list]
 
-    # Dapatkan public_id dari setiap gambar dan hapus dari Cloudinary
+    # Hapus gambar lama dari Cloudinary
     for old_url in cover_old_list:
-        try:
-            # Ambil nama public_id dari URL Cloudinary
-            # Contoh: https://res.cloudinary.com/yourcloud/image/upload/v1234567890/cover_buku/nama.jpg
-            # ambil "cover_buku/nama"
-            public_id = '/'.join(old_url.split('/')[-2:]).split('.')[0]
-            cloudinary.uploader.destroy(public_id)
-        except Exception as e:
-            print(f"Gagal menghapus {old_url}: {e}")
+        if old_url and "res.cloudinary.com" in old_url:
+            public_id = extract_public_id(old_url)
+            if public_id:
+                try:
+                    result = cloudinary.uploader.destroy(public_id)
+                    print(f"Hapus cover lama: {public_id} → {result}")
+                except Exception as e:
+                    print(f"Gagal menghapus cover lama: {e}")
 
-    # Upload gambar baru
+    # Upload cover baru
     files = request.files.getlist("gambar_give[]")
     if not files or files[0].filename == "":
         return jsonify({'msg': 'Gambar tidak ditemukan!'})
@@ -1069,27 +1069,25 @@ def editcover():
         if extension not in ['jpg', 'jpeg', 'png', 'webp']:
             return jsonify({'msg': f'File tidak valid: {filename}'})
 
-        # Upload ke Cloudinary
         public_id = f"cover_buku/{url_receive}-{index+1}"
         result = cloudinary.uploader.upload(
             file,
             public_id=public_id,
-            folder="cover_buku"  # redundant but safe
+            folder="cover_buku"
         )
 
-        # Buat URL yang sudah dioptimasi
+        # Optimalkan URL
         optimized_url, _ = cloudinary_url(
             public_id,
             fetch_format="auto",
             quality="auto"
         )
-
         cover_list.append(optimized_url)
 
     # Update database
     new_doc = {
         "AllCover": cover_list,
-        "Cover": cover_list[0]  # set gambar pertama sebagai thumbnail
+        "Cover": cover_list[0]  # thumbnail = gambar pertama
     }
 
     db.barang.update_one({"Date": waktu}, {"$set": new_doc})
