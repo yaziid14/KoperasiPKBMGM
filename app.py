@@ -215,32 +215,36 @@ def deletebook():
 
     url = buku.get("URL")
     cover_old_list = buku.get("AllCover", [])
-    cover_single = buku.get("Cover")
 
-    # Gabungkan semua cover, hindari duplikat
+    # Gabungkan semua cover dari AllCover
     all_urls = set()
-
     if isinstance(cover_old_list, str):
         all_urls.add(cover_old_list)
     elif isinstance(cover_old_list, list):
         all_urls.update(cover_old_list)
 
-    if isinstance(cover_single, str):
-        all_urls.add(cover_single)
-
-    # Hapus gambar dari Cloudinary
-    for old_url in all_urls:
+    def extract_public_id(cloudinary_url):
         try:
-            if "res.cloudinary.com" not in old_url:
-                continue  # Lewati jika bukan URL Cloudinary
+            if "res.cloudinary.com" not in cloudinary_url:
+                return None
 
-            # Ekstrak public_id dari URL
-            path_part = old_url.split("/upload/")[-1]
-            public_id = '/'.join(path_part.split("/")[1:]).split(".")[0]
-
-            cloudinary.uploader.destroy(public_id)
+            # Ambil bagian setelah 'upload/' dan buang transformasi + versi
+            path = cloudinary_url.split("/upload/")[-1]
+            path = re.sub(r'^(v\d+/|[^/]+,)*v\d+/|^(f_auto,q_auto,|[^/]+,)*', '', path)  # Bersihkan versi dan transformasi
+            return path
         except Exception as e:
-            print(f"Gagal menghapus {old_url}: {e}")
+            print(f"Error ekstrak public_id: {e}")
+            return None
+
+    # Proses penghapusan Cloudinary
+    for old_url in all_urls:
+        public_id = extract_public_id(old_url)
+        if public_id:
+            try:
+                result = cloudinary.uploader.destroy(public_id, invalidate=True)
+                print(f"Hapus {public_id} → {result}")
+            except Exception as e:
+                print(f"Gagal menghapus {public_id}: {e}")
 
     # Hapus data dari database
     db.barang.delete_one({'JudulBuku': judul})
