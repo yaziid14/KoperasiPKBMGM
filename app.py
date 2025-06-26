@@ -1023,7 +1023,8 @@ def hapus_pesanan_kadaluarsa():
     dan dibuat lebih dari 1 hari yang lalu, serta mengembalikan stoknya ke koleksi 'barang'.
     """
     try:
-        batas_waktu = datetime.now(ZoneInfo("Asia/Jakarta")) - timedelta(days=1)
+        batas_waktu = datetime.now(
+            ZoneInfo("Asia/Jakarta")) - timedelta(days=1)
 
         # Daftar status yang dianggap kadaluarsa
         status_kadaluarsa = ["Belum Bayar", "Menunggu Pembayaran"]
@@ -1050,7 +1051,8 @@ def hapus_pesanan_kadaluarsa():
             "waktu": {"$lt": batas_waktu}
         })
 
-        print(f"{hasil.deleted_count} pesanan kadaluarsa telah dihapus dan stok dikembalikan.")
+        print(
+            f"{hasil.deleted_count} pesanan kadaluarsa telah dihapus dan stok dikembalikan.")
 
     except Exception as e:
         print(f"Terjadi kesalahan saat menghapus pesanan kadaluarsa: {e}")
@@ -1184,8 +1186,9 @@ def ajukan_pembatalan():
         return jsonify({"msg": "Terjadi kesalahan saat mengajukan pembatalan."})
 
 
-if __name__ == '__main__':
-    if not is_running_from_reloader():
-        scheduler.start()
+if not is_running_from_reloader():
+    scheduler.start()
 
+if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+    
