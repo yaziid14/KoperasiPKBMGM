@@ -360,9 +360,8 @@ def hapus_user():
     if not user_data:
         return jsonify({'msg': 'User tidak ditemukan.'}), 404
 
+    # Hapus foto profil jika bukan default
     old_url = user_data.get("profile_default", "")
-
-    # Hapus foto profil jika bukan default dan ada di Cloudinary
     if old_url and "res.cloudinary.com" in old_url and not old_url.startswith('/static/'):
         public_id = extract_public_id(old_url)
         if public_id:
@@ -372,7 +371,7 @@ def hapus_user():
             except Exception as e:
                 print(f"Gagal menghapus gambar profil Cloudinary: {e}")
 
-    # Hapus descriptor .npy dari Cloudinary
+    # Hapus semua descriptor wajah (format .npy di Cloudinary)
     descriptor_list = user_data.get("descriptors", [])
     for desc in descriptor_list:
         file_url = desc.get("url", "")
@@ -428,6 +427,7 @@ def tambahbuku():
         return jsonify({'msg': 'Gambar tidak ditemukan!'})
 
     cover_list = []
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
 
     for index, file in enumerate(files):
         filename = secure_filename(file.filename)
@@ -436,20 +436,19 @@ def tambahbuku():
         if extension not in ['jpg', 'jpeg', 'png', 'webp']:
             return jsonify({'msg': f'File tidak valid: {filename}'})
 
-        # Upload ke Cloudinary
-        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-        public_id = f"cover_buku/{url_receive}_{timestamp}_{index+1}"
+        # ✅ Hanya gunakan nama tanpa prefix folder
+        public_id = f"{url_receive}_{timestamp}_{index+1}"
 
         try:
             result = cloudinary.uploader.upload(
                 file,
-                folder="cover_buku",
-                public_id=public_id
+                folder="cover_buku",      # Folder ditentukan di sini
+                public_id=public_id       # Tanpa "cover_buku/" di public_id
             )
         except Exception as e:
             return jsonify({'msg': f"Gagal upload {filename}: {str(e)}"}), 500
 
-        # Generate optimized URL
+        # ✅ Optimized URL harus tambahkan prefix "cover_buku/" di sini saja
         optimized_url, _ = cloudinary_url(
             f"cover_buku/{public_id}",
             fetch_format="auto",
@@ -457,7 +456,6 @@ def tambahbuku():
             secure=True
         )
 
-        # Tambahkan ke list
         cover_list.append(optimized_url)
 
     cover_thumbnail = cover_list[0]
@@ -509,7 +507,7 @@ def update_profile():
         alamat_receive = request.form.get("alamat_give")
 
         now = datetime.now(ZoneInfo("Asia/Jakarta"))
-        mytime = now.strftime('%Y-%m-%d-%H-%M-%S')
+        mytime = now.strftime('%Y%m%d%H%M%S')  # Gunakan format tanpa tanda hubung
 
         new_doc = {
             'email': email_receive,
@@ -521,36 +519,47 @@ def update_profile():
         if "file_give" in request.files:
             file = request.files.get("file_give")
             filename = secure_filename(file.filename)
-            extension = filename.split(".")[-1]
+            extension = filename.split(".")[-1].lower()
 
-            public_id = f"profile/{username}-{mytime}"
+            if extension not in ['jpg', 'jpeg', 'png', 'webp']:
+                return jsonify({"result": "error", "msg": "Format gambar tidak didukung!"}), 400
 
-            # Upload ke Cloudinary
-            result = cloudinary.uploader.upload(
-                file,
-                folder="profile",
-                public_id=f"{username}-{mytime}",
-                transformation=[
-                    {"fetch_format": "auto", "quality": "auto", "width": 300,
-                        "height": 300, "crop": "fill", "gravity": "face"}
-                ]
-            )
+            public_id = f"{username}_{mytime}"
 
-            optimized_url = result['secure_url']
-            new_doc['profile_default'] = optimized_url
+            try:
+                # Upload ke Cloudinary
+                result = cloudinary.uploader.upload(
+                    file,
+                    folder="profile",
+                    public_id=public_id,
+                    transformation=[
+                        {
+                            "fetch_format": "auto",
+                            "quality": "auto",
+                            "width": 300,
+                            "height": 300,
+                            "crop": "fill",
+                            "gravity": "face"
+                        }
+                    ]
+                )
 
-            # Hapus foto profil lama jika ada
-            user_data = db.login.find_one({"username": username})
-            old_url = user_data.get("profile_default", "")
-            if old_url and "res.cloudinary.com" in old_url:
-                try:
-                    # Ambil public_id lama
-                    path_part = old_url.split("/upload/")[-1]
-                    public_id_old = '/'.join(path_part.split("/")
-                                             [1:]).split(".")[0]
-                    cloudinary.uploader.destroy(public_id_old)
-                except Exception as e:
-                    print(f"Gagal menghapus gambar lama: {e}")
+                optimized_url = result['secure_url']
+                new_doc['profile_default'] = optimized_url
+
+                # Hapus foto lama (jika ada)
+                user_data = db.login.find_one({"username": username})
+                old_url = user_data.get("profile_default", "")
+                if old_url and "res.cloudinary.com" in old_url:
+                    try:
+                        # Ekstrak public_id lama
+                        parts = old_url.split("/upload/")[-1]
+                        public_id_old = parts.split(".")[0]  # tanpa ekstensi
+                        cloudinary.uploader.destroy(public_id_old)
+                    except Exception as e:
+                        print(f"Gagal menghapus gambar lama: {e}")
+            except Exception as upload_err:
+                return jsonify({"result": "error", "msg": f"Gagal upload foto: {str(upload_err)}"}), 500
 
         db.login.update_one({"username": username}, {"$set": new_doc})
         return jsonify({"result": "success", "msg": "Profil berhasil diperbarui!"})
@@ -1072,15 +1081,17 @@ def editcover():
         if extension not in ['jpg', 'jpeg', 'png', 'webp']:
             return jsonify({'msg': f'File tidak valid: {filename}'})
 
-        public_id = f"cover_buku/{url_receive}_{timestamp}_{index+1}"
+        # ✅ Gunakan public_id TANPA "cover_buku/"
+        public_id = f"{url_receive}_{timestamp}_{index+1}"
+
         result = cloudinary.uploader.upload(
             file,
             public_id=public_id,
-            folder="cover_buku"
+            folder="cover_buku"  # Sudah mengatur foldernya di sini
         )
 
         optimized_url, _ = cloudinary_url(
-            public_id,
+            f"cover_buku/{public_id}",  # ✅ Tambahkan prefix DI SINI saja
             fetch_format="auto",
             quality="auto"
         )
