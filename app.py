@@ -212,8 +212,6 @@ def extract_public_id(cloudinary_url):
 
         # Ambil bagian setelah '/upload/' dan buang versi + transformasi
         path = cloudinary_url.split("/upload/")[-1]
-
-        # Hapus semua parameter transformasi sebelum folder (misal "cover_buku/")
         segments = path.split('/')
         clean_segments = []
 
@@ -223,7 +221,7 @@ def extract_public_id(cloudinary_url):
                 continue
             clean_segments.append(seg)
 
-        # Gabungkan ulang, hapus ekstensi jika ada
+        # Gabungkan ulang dan hapus ekstensi jika ada
         public_id = '/'.join(clean_segments)
         if '.' in public_id:
             public_id = '.'.join(public_id.split('.')[:-1])
@@ -257,7 +255,8 @@ def deletebook():
         public_id = extract_public_id(old_url)
         if public_id:
             try:
-                result = cloudinary.uploader.destroy(public_id, invalidate=True)
+                result = cloudinary.uploader.destroy(
+                    public_id, invalidate=True)
                 print(f"Hapus {public_id} → {result}")
             except Exception as e:
                 print(f"Gagal menghapus {public_id}: {e}")
@@ -293,7 +292,7 @@ def radmin():
         'password': password_hash,
         'nohp': nomor_receive,
         'alamat': '',
-        'profile_default': 'profil_default.jpg',
+        'profile_default': '/static/profil_default.jpg',
         'role': 'admin'
     }
     db.login.insert_one(doc)
@@ -349,12 +348,42 @@ def dbadmin():
 @app.route('/hapus-user', methods=['POST'])
 def hapus_user():
     username = request.form.get('username_give')
+
+    # Ambil data user
+    user_data = db.login.find_one({'username': username})
+    if not user_data:
+        return jsonify({'msg': 'User tidak ditemukan.'}), 404
+
+    old_url = user_data.get("profile_default", "")
+
+    # Coba hapus dari Cloudinary jika URL valid dan bukan file lokal
+    if old_url and "res.cloudinary.com" in old_url and not old_url.startswith('/static/'):
+        public_id = extract_public_id(old_url)
+        if public_id:
+            try:
+                result = cloudinary.uploader.destroy(public_id, invalidate=True)
+                print(f"Hapus foto profil: {public_id} → {result}")
+            except Exception as e:
+                print(f"Gagal menghapus gambar Cloudinary: {e}")
+
+    # Hapus user dari semua koleksi terkait
     db.login.delete_one({'username': username})
     db.cart.delete_many({'username': username})
     db.favorite.delete_many({'username': username})
     db.livechat.delete_many({'username': username})
     db.orderan.delete_many({'username': username})
     db.pembatalan.delete_many({'username': username})
+
+    return jsonify({'msg': f'User {username} berhasil dihapus.'})
+
+    # Hapus data dari semua koleksi terkait
+    db.login.delete_one({'username': username})
+    db.cart.delete_many({'username': username})
+    db.favorite.delete_many({'username': username})
+    db.livechat.delete_many({'username': username})
+    db.orderan.delete_many({'username': username})
+    db.pembatalan.delete_many({'username': username})
+
     return jsonify({'msg': f'User {username} berhasil dihapus.'})
 
 
