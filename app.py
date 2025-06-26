@@ -1193,7 +1193,7 @@ def simpan_wajah():
 
         # Buat nama unik berdasarkan waktu
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-        public_id = f"face_descriptors/{username}/{username}_{timestamp}"
+        public_id = f"face_descriptors/{username}_{timestamp}"
 
         try:
             # Upload ke Cloudinary
