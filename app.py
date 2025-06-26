@@ -1045,7 +1045,7 @@ def editcover():
     if isinstance(cover_old_list, str):
         cover_old_list = [cover_old_list]
 
-    # Hapus gambar lama dari Cloudinary
+    # Hapus cover lama dari Cloudinary
     for old_url in cover_old_list:
         if old_url and "res.cloudinary.com" in old_url:
             public_id = extract_public_id(old_url)
@@ -1056,13 +1056,14 @@ def editcover():
                 except Exception as e:
                     print(f"Gagal menghapus cover lama: {e}")
 
-    # Upload cover baru
+    # Ambil file cover baru
     files = request.files.getlist("gambar_give[]")
     if not files or files[0].filename == "":
         return jsonify({'msg': 'Gambar tidak ditemukan!'})
 
     cover_list = []
     url_receive = databarang["URL"]
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
 
     for index, file in enumerate(files):
         filename = secure_filename(file.filename)
@@ -1071,16 +1072,13 @@ def editcover():
         if extension not in ['jpg', 'jpeg', 'png', 'webp']:
             return jsonify({'msg': f'File tidak valid: {filename}'})
 
-        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         public_id = f"cover_buku/{url_receive}_{timestamp}_{index+1}"
-
         result = cloudinary.uploader.upload(
             file,
             public_id=public_id,
             folder="cover_buku"
         )
 
-        # Optimalkan URL
         optimized_url, _ = cloudinary_url(
             public_id,
             fetch_format="auto",
@@ -1088,32 +1086,43 @@ def editcover():
         )
         cover_list.append(optimized_url)
 
-    # Update database
+    # Update dokumen di database
     new_doc = {
         "AllCover": cover_list,
-        "Cover": cover_list[0]  # thumbnail = gambar pertama
+        "Cover": cover_list[0]
     }
-
     db.barang.update_one({"JudulBuku": barang}, {"$set": new_doc})
     return jsonify({'msg': 'Update Cover Berhasil!'})
 
 
 @app.route("/editbuku", methods=["POST"])
 def editbuku():
-    update_deskripsi = request.form.get('deskripsi_update')
-    update_harga = int(request.form.get('harga_update'))
-    update_stok = int(request.form.get('stok_update'))
-    update_kategori = request.form.get('kategori_update')
-    judul = request.form.get('judul_give')
+    try:
+        update_deskripsi = request.form.get('deskripsi_update', '').strip()
+        update_harga = int(request.form.get('harga_update', '0').strip())
+        update_stok = int(request.form.get('stok_update', '0').strip())
+        update_kategori = request.form.get('kategori_update', '').strip()
+        judul = request.form.get('judul_give', '').strip()
 
-    new_doc = {
-        'Deskripsi': update_deskripsi,
-        'Harga': update_harga,
-        'Stok': update_stok,
-        'Kategori': update_kategori,
-    }
-    db.barang.update_one({"JudulBuku": judul}, {"$set": new_doc})
-    return jsonify({'msg': 'Update Detail Berhasil!'})
+        if not all([judul, update_deskripsi, update_kategori]):
+            return jsonify({'msg': 'Data tidak lengkap!'}), 400
+
+        new_doc = {
+            'Deskripsi': update_deskripsi,
+            'Harga': update_harga,
+            'Stok': update_stok,
+            'Kategori': update_kategori,
+        }
+
+        result = db.barang.update_one({"JudulBuku": judul}, {"$set": new_doc})
+
+        if result.matched_count == 0:
+            return jsonify({'msg': 'Buku tidak ditemukan!'}), 404
+
+        return jsonify({'msg': 'Update Detail Berhasil!'})
+    except Exception as e:
+        print(f"Error saat mengupdate buku: {e}")
+        return jsonify({'msg': 'Terjadi kesalahan di server'}), 500
 
 
 @app.route('/search/<kata>')
