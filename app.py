@@ -207,26 +207,32 @@ def userpage():
 
 def extract_public_id(cloudinary_url):
     try:
-        if "res.cloudinary.com" not in cloudinary_url:
+        if not cloudinary_url or "res.cloudinary.com" not in cloudinary_url:
             return None
 
-        # Ambil bagian setelah '/upload/' dan buang versi + transformasi
+        # Ambil bagian setelah '/upload/'
         path = cloudinary_url.split("/upload/")[-1]
+
+        # Pisahkan path berdasarkan '/'
         segments = path.split('/')
         clean_segments = []
 
         for seg in segments:
-            # Skip segmen transformasi (mengandung koma) dan versi (v123...)
-            if ',' in seg or (seg.startswith('v') and seg[1:].isdigit()):
+            # Hilangkan transformasi dan versi
+            if ',' in seg:  # Transformasi: f_auto,q_auto,...
+                continue
+            if seg.startswith('v') and seg[1:].isdigit():  # Versi seperti v162234234
                 continue
             clean_segments.append(seg)
 
-        # Gabungkan ulang dan hapus ekstensi jika ada
-        public_id = '/'.join(clean_segments)
-        if '.' in public_id:
-            public_id = '.'.join(public_id.split('.')[:-1])
+        # Gabungkan ulang path
+        full_path = '/'.join(clean_segments)
 
-        return public_id
+        # Hapus ekstensi file (contoh: .jpg, .webp, .npy)
+        if '.' in full_path:
+            full_path = '.'.join(full_path.split('.')[:-1])
+
+        return full_path
     except Exception as e:
         print(f"Error ekstrak public_id: {e}")
         return None
@@ -356,7 +362,7 @@ def hapus_user():
 
     old_url = user_data.get("profile_default", "")
 
-    # Coba hapus dari Cloudinary jika URL valid dan bukan file lokal
+    # Hapus foto profil jika bukan default dan ada di Cloudinary
     if old_url and "res.cloudinary.com" in old_url and not old_url.startswith('/static/'):
         public_id = extract_public_id(old_url)
         if public_id:
@@ -364,19 +370,22 @@ def hapus_user():
                 result = cloudinary.uploader.destroy(public_id, invalidate=True)
                 print(f"Hapus foto profil: {public_id} → {result}")
             except Exception as e:
-                print(f"Gagal menghapus gambar Cloudinary: {e}")
+                print(f"Gagal menghapus gambar profil Cloudinary: {e}")
+
+    # Hapus descriptor .npy dari Cloudinary
+    descriptor_list = user_data.get("descriptors", [])
+    for desc in descriptor_list:
+        file_url = desc.get("url", "")
+        if file_url and "res.cloudinary.com" in file_url:
+            public_id = extract_public_id(file_url)
+            if public_id:
+                try:
+                    result = cloudinary.uploader.destroy(public_id, resource_type="raw", invalidate=True)
+                    print(f"Hapus descriptor: {public_id} → {result}")
+                except Exception as e:
+                    print(f"Gagal menghapus descriptor Cloudinary: {e}")
 
     # Hapus user dari semua koleksi terkait
-    db.login.delete_one({'username': username})
-    db.cart.delete_many({'username': username})
-    db.favorite.delete_many({'username': username})
-    db.livechat.delete_many({'username': username})
-    db.orderan.delete_many({'username': username})
-    db.pembatalan.delete_many({'username': username})
-
-    return jsonify({'msg': f'User {username} berhasil dihapus.'})
-
-    # Hapus data dari semua koleksi terkait
     db.login.delete_one({'username': username})
     db.cart.delete_many({'username': username})
     db.favorite.delete_many({'username': username})
@@ -1159,16 +1168,15 @@ def simpan_wajah():
         np.save(np_bytes_io, np.array(descriptor))
         np_bytes_io.seek(0)
 
-        # Buat timestamp dan public_id unik
+        # Buat timestamp dan public_id unik dengan folder username
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-        public_id = f"face_descriptors/{username}_{timestamp}"
+        public_id = f"face_descriptors/{username}/{username}_{timestamp}"
 
         # Upload file ke Cloudinary
         result = cloudinary.uploader.upload(
             np_bytes_io,
             resource_type="raw",
-            public_id=public_id,
-            folder="face_descriptors",
+            public_id=public_id,  # Sudah mengandung folder lengkap
             overwrite=False
         )
 
@@ -1180,21 +1188,16 @@ def simpan_wajah():
 
         # Hapus descriptor tertua jika sudah lebih dari 5
         if len(descriptors) >= 5:
-            descriptors = sorted(
-                descriptors, key=lambda d: d.get("uploaded", datetime.min))
-            # simpan yang terbaru 4 + 1 baru = 5
+            descriptors = sorted(descriptors, key=lambda d: d.get("uploaded", datetime.min))
             descriptors_to_remove = descriptors[:len(descriptors) - 4]
 
             for desc in descriptors_to_remove:
                 old_url = desc.get("url")
                 if old_url and "res.cloudinary.com" in old_url:
                     try:
-                        # Ekstrak public_id dari URL
                         path_part = old_url.split("/upload/")[-1]
-                        public_id_old = '/'.join(path_part.split("/")
-                                                 [1:]).split(".")[0]
-                        cloudinary.uploader.destroy(
-                            public_id_old, resource_type="raw")
+                        public_id_old = '/'.join(path_part.split("/")[1:]).split(".")[0]
+                        cloudinary.uploader.destroy(public_id_old, resource_type="raw")
                     except Exception as e:
                         print(f"Gagal menghapus descriptor lama: {e}")
 
