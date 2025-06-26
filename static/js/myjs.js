@@ -2139,8 +2139,12 @@ function cekVerifikasiWajah(orderid, tanggal) {
     });
 }
 
-
 function pesananSelesai(orderid) {
+    if (!orderid) {
+        Swal.fire("Error", "Order ID tidak tersedia.", "error");
+        return;
+    }
+
     Swal.fire({
         title: "Konfirmasi",
         text: "Apakah Anda yakin pesanan ini sudah selesai?",
@@ -2152,20 +2156,27 @@ function pesananSelesai(orderid) {
         if (result.isConfirmed) {
             fetch('/pesanan-selesai', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ orderid: orderid })
             })
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error("Gagal menerima respon dari server");
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     if (data.result === 'success') {
-                        Swal.fire("Sukses", "Status pesanan telah diperbarui.", "success");
-                        showorder(); // Refresh tampilan
+                        Swal.fire("Sukses", "Status pesanan telah diperbarui.", "success")
+                            .then(() => showorder()); // Refresh setelah user klik OK
                     } else {
-                        Swal.fire("Gagal", data.message || "Terjadi kesalahan", "error");
+                        Swal.fire("Gagal", data.message || "Terjadi kesalahan.", "error");
                     }
                 })
                 .catch(err => {
-                    Swal.fire("Error", "Gagal menghubungi server", "error");
+                    Swal.fire("Error", err.message || "Gagal menghubungi server.", "error");
                 });
         }
     });
@@ -2173,6 +2184,14 @@ function pesananSelesai(orderid) {
 
 function chatPenjual(orderid) {
     openChat(orderid); // Panggil fungsi buka popup chat
+}
+
+if (typeof loadChat === 'function') {
+    setInterval(loadChat, 5000);
+}
+
+if (typeof loadAdminChat === 'function') {
+    setInterval(loadAdminChat, 5000);
 }
 
 function formatTime(timestampStr) {

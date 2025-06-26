@@ -162,15 +162,17 @@
                 chatBox.innerHTML = '';
 
                 if (data.result === 'success') {
+                    const currentUser = getCookie('username');
+
                     data.chat.forEach(c => {
-                        const roleClass = c.sender === getCookie('username') ? 'admin' : 'user';
+                        const roleClass = c.username === currentUser ? 'admin' : 'user';
 
                         chatBox.innerHTML += `
-                        <div class="chat-message ${roleClass}">
-                            <div class="sender-name"><b>${c.sender}</b></div>
-                            <div class="bubble">${c.message}</div>
-                            <div class="timestamp">${formatTime(c.timestamp)}</div>
-                        </div>`;
+                <div class="chat-message ${roleClass}">
+                    <div class="sender-name"><b>${c.username}</b></div>
+                    <div class="bubble">${c.message}</div>
+                    <div class="timestamp">${formatTime(c.timestamp)}</div>
+                </div>`;
                     });
                 } else {
                     chatBox.innerHTML = `<div class='text-center text-danger'>${data.message}</div>`;

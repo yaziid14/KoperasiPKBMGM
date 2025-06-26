@@ -348,14 +348,14 @@
                     const currentUser = getCookie('username');
 
                     data.chat.forEach(c => {
-                        const roleClass = c.sender === currentUser ? 'user' : 'admin';
+                        const roleClass = c.username === currentUser ? 'user' : 'admin';
 
                         chatBox.innerHTML += `
-                    <div class="chat-message ${roleClass}">
-                        <div class="sender-name"><b>${c.sender}</b></div>
-                        <div class="bubble">${c.message}</div>
-                        <div class="timestamp">${formatTime(c.timestamp)}</div>
-                    </div>`;
+                <div class="chat-message ${roleClass}">
+                    <div class="sender-name"><b>${c.username}</b></div>
+                    <div class="bubble">${c.message}</div>
+                    <div class="timestamp">${formatTime(c.timestamp)}</div>
+                </div>`;
                     });
 
                     chatBox.scrollTop = chatBox.scrollHeight;
@@ -398,8 +398,6 @@
             }
             return null;
         }
-
-        setInterval(loadChat, 5000);
     </script>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
