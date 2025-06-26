@@ -215,18 +215,27 @@ def deletebook():
 
     url = buku.get("URL")
     cover_old_list = buku.get("AllCover", [])
+    cover_single = buku.get("Cover")
+
+    # Gabungkan semua cover, hindari duplikat
+    all_urls = set()
 
     if isinstance(cover_old_list, str):
-        cover_old_list = [cover_old_list]
+        all_urls.add(cover_old_list)
+    elif isinstance(cover_old_list, list):
+        all_urls.update(cover_old_list)
+
+    if isinstance(cover_single, str):
+        all_urls.add(cover_single)
 
     # Hapus gambar dari Cloudinary
-    for old_url in cover_old_list:
+    for old_url in all_urls:
         try:
-            # Ambil public_id dari URL Cloudinary
-            # Contoh URL: https://res.cloudinary.com/yourcloud/image/upload/v123456/cover_buku/nama.jpg
-            # hasil: v123456/cover_buku/nama.jpg
+            if "res.cloudinary.com" not in old_url:
+                continue  # Lewati jika bukan URL Cloudinary
+
+            # Ekstrak public_id dari URL
             path_part = old_url.split("/upload/")[-1]
-            # hasil: cover_buku/nama
             public_id = '/'.join(path_part.split("/")[1:]).split(".")[0]
 
             cloudinary.uploader.destroy(public_id)
@@ -371,17 +380,21 @@ def tambahbuku():
 
         # Upload ke Cloudinary
         public_id = f"{url_receive}-{index+1}"
-        result = cloudinary.uploader.upload(
-            file,
-            folder="cover_buku",
-            public_id=public_id
-        )
+        try:
+            result = cloudinary.uploader.upload(
+                file,
+                folder="cover_buku",
+                public_id=public_id
+            )
+        except Exception as e:
+            return jsonify({'msg': f"Gagal upload {filename}: {str(e)}"}), 500
 
         # Generate optimized URL
         optimized_url, _ = cloudinary_url(
             f"cover_buku/{public_id}",
             fetch_format="auto",
-            quality="auto"
+            quality="auto",
+            secure=True
         )
 
         # Tambahkan ke list
