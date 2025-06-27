@@ -172,7 +172,7 @@
             }
         }
 
-        function captureDescriptor() {
+        async function captureDescriptor() {
             if (capturing) return;
 
             const username = $.cookie('username');
@@ -193,6 +193,8 @@
             progressBar.value = 0;
             spinner.style.display = 'inline-block';
 
+            const allDescriptors = [];
+
             captureInterval = setInterval(async () => {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -209,29 +211,30 @@
                     return;
                 }
 
-                const descriptor = Array.from(detection.descriptor); // Float32Array ke array biasa
+                const descriptor = Array.from(detection.descriptor);
+                allDescriptors.push(descriptor);
+                captured++;
+                progressBar.value = captured;
 
-                $.ajax({
-                    type: 'POST',
-                    url: '/simpan-wajah',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        username: username,
-                        descriptor: descriptor
-                    }),
-                    success: function (response) {
-                        if (response.result === "success") {
-                            console.log(`✅ Capture ${captured + 1}: ${response.msg}`);
-                            captured++;
-                            progressBar.value = captured;
+                if (captured >= captureCount) {
+                    clearInterval(captureInterval);
+                    spinner.style.display = 'none';
+                    capturing = false;
 
-                            if (captured >= captureCount) {
-                                clearInterval(captureInterval);
-                                capturing = false;
-                                spinner.style.display = 'none';
+                    // Kirim semua descriptor sekaligus
+                    $.ajax({
+                        type: 'POST',
+                        url: '/simpan-wajah',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            username: username,
+                            descriptors: allDescriptors
+                        }),
+                        success: function (response) {
+                            if (response.result === "success") {
                                 Swal.fire("Berhasil", "Wajah berhasil direkam!", "success");
                                 closeFaceModal();
-                                // Ganti tombol jadi teks
+
                                 const btnVerifikasi = document.getElementById("btn-verifikasi-wajah");
                                 if (btnVerifikasi) {
                                     const span = document.createElement("span");
@@ -239,21 +242,15 @@
                                     span.innerText = "✅ Wajah sudah terverifikasi";
                                     btnVerifikasi.replaceWith(span);
                                 }
+                            } else {
+                                Swal.fire("Gagal Simpan", response.msg, "error");
                             }
-                        } else {
-                            Swal.fire("Gagal Simpan", response.msg, "error");
-                            clearInterval(captureInterval);
-                            capturing = false;
-                            spinner.style.display = 'none';
+                        },
+                        error: function () {
+                            Swal.fire("Gagal", "Gagal mengirim data descriptor ke server", "error");
                         }
-                    },
-                    error: function () {
-                        Swal.fire("Gagal", "Gagal mengirim descriptor ke server", "error");
-                        clearInterval(captureInterval);
-                        capturing = false;
-                        spinner.style.display = 'none';
-                    }
-                });
+                    });
+                }
             }, 1500);
         }
 
