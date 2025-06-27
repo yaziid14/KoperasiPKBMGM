@@ -1977,8 +1977,8 @@ function showorder(filter = 'aktif') {
                             status === 'belum bayar' ? 'text-warning' :
                                 status === 'sudah bayar' ? 'text-info' :
                                     status === 'menunggu pembayaran' ? 'text-primary' :
-                                        status === 'terkirim' ? 'text-success' :
-                                            status === 'pesanan selesai' ? 'text-muted' :
+                                        status === 'terkirim' ? 'text-secondary' :
+                                            status === 'pesanan selesai' ? 'text-success' :
                                                 'text-secondary'}">
                                             ${item.status}
                                         </span>
@@ -2024,8 +2024,24 @@ function showorder(filter = 'aktif') {
                     `;
                 }
 
+                let badgeStatus = '';
+                if (status === 'dibatalkan') {
+                    badgeStatus = `
+                        <div class="position-absolute top-0 end-0 mt-2 me-3">
+                            <span class="badge bg-danger">❌ DIBATALKAN</span>
+                        </div>
+                    `;
+                } else if (status === 'pesanan selesai') {
+                    badgeStatus = `
+                        <div class="position-absolute top-0 end-0 mt-2 me-3">
+                            <span class="badge bg-success">✔️ SELESAI</span>
+                        </div>
+                    `;
+                }
+
                 let temp_html = `
                     <div class="card shadow-lg p-4 rounded-4 mb-4 position-relative" id="order-card-${id}">
+                        ${badgeStatus}
                         <h4 class="mb-3">${formatTanggal(waktu)}</h4>
                         ${itemHTML}
                         ${(status === 'belum bayar' || status === 'menunggu pembayaran') ? `
@@ -2586,7 +2602,15 @@ function showorderadmin(filter = 'aktif') {
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <strong>Status:</strong>
-                                        <span class="${status === 'belum bayar' ? 'text-warning' : (status === 'dibatalkan' ? 'text-danger' : 'text-success')}">${item.status}</span>
+                                        <span class="${status === 'dibatalkan' ? 'text-danger' :
+                            status === 'belum bayar' ? 'text-warning' :
+                                status === 'sudah bayar' ? 'text-info' :
+                                    status === 'menunggu pembayaran' ? 'text-primary' :
+                                        status === 'terkirim' ? 'text-secondary' :
+                                            status === 'pesanan selesai' ? 'text-success' :
+                                                'text-secondary'}">
+                                            ${item.status}
+                                        </span>
                                     </li>
                                 </ul>
                             </div>
@@ -2637,6 +2661,10 @@ function showorderadmin(filter = 'aktif') {
                         ${badgeStatus}
                         <h4 class="mb-3">${formatTanggal(waktu)} - <span class="text-primary">${username}</span></h4>
                         ${itemHTML}
+                        ${(status === 'belum bayar' || status === 'menunggu pembayaran') ? `
+                        <div class="text-end mt-3">
+                            <strong>Batas Waktu: <span id="countdown-${id}" class="text-danger"></span></strong>
+                        </div>` : ''}
                         ${tombolAksi}
                     </div>
                 `;
