@@ -197,11 +197,13 @@ def ruser():
 
 @app.route('/adminpage')
 def adminpage():
+    hapus_pesanan_kadaluarsa()
     return render_template('admin.html')
 
 
 @app.route('/userpage')
 def userpage():
+    hapus_pesanan_kadaluarsa()
     return render_template('user.html')
 
 
@@ -658,8 +660,15 @@ def orderan():
         return jsonify({'result': 'error', 'msg': 'Data tidak lengkap'}), 400
 
     order_id = f"ORDER-{username_receive}-{int(time.time())}"
-    now = datetime.now(ZoneInfo("Asia/Jakarta"))
-    mytime_str = now.strftime('%Y-%m-%d %H:%M:%S')
+
+    # Ambil waktu lokal (WIB)
+    now_jakarta = datetime.now(ZoneInfo("Asia/Jakarta"))
+
+    # Ubah ke UTC
+    now_utc = datetime.now(ZoneInfo("UTC"))
+
+    # Simpan format string (jika perlu untuk tampilan)
+    mytime_str = now_jakarta.strftime('%Y-%m-%d %H:%M:%S')
 
     items_to_save = []
 
@@ -684,7 +693,7 @@ def orderan():
             'cover': cover,
             'AllCover': all_cover,
             'status': 'Belum Bayar',
-            'waktu': now,
+            'waktu': now_utc
         })
 
         items_to_save.append(item)
@@ -857,11 +866,13 @@ def payment_callback():
 
 @app.route('/orders')
 def orders():
+    hapus_pesanan_kadaluarsa()
     return render_template('pesanan.html')
 
 
 @app.route('/orderadmin')
 def orderadmin():
+    hapus_pesanan_kadaluarsa()
     return render_template('orderadmin.html')
 
 
@@ -1305,6 +1316,22 @@ def ajukan_pembatalan():
     except Exception as e:
         print(e)
         return jsonify({"msg": "Terjadi kesalahan saat mengajukan pembatalan."})
+
+
+def hapus_pesanan_kadaluarsa():
+    """
+    Hapus pesanan 'belum bayar' atau 'menunggu pembayaran' yang kadaluarsa >24 jam.
+    """
+    try:
+        batas_waktu = datetime.now(ZoneInfo("UTC")) - timedelta(hours=24)
+        hasil = db.orderan.delete_many({
+            "status": {"$in": ["Belum Bayar", "Menunggu Pembayaran"]},
+            "waktu": {"$lt": batas_waktu}
+        })
+        if hasil.deleted_count > 0:
+            print(f"⏳ Hapus otomatis {hasil.deleted_count} pesanan kadaluarsa")
+    except Exception as e:
+        print("❌ Gagal hapus pesanan kadaluarsa:", e)
 
 
 if __name__ == '__main__':
