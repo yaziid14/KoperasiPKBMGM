@@ -506,7 +506,6 @@ function lihatOrder() {
     window.location.href = '/orderadmin';
 }
 
-// Page user
 function tampil_user() {
     $.ajax({
         type: 'GET',
@@ -514,6 +513,66 @@ function tampil_user() {
         data: {},
         success: function (response) {
             let rows = response['daftarbuku'];
+            let fav_rows = response['daftarfavorite'];
+            let cart_rows = response['daftarkeranjang'];
+            let order_count = new Set(response['daftarorder'].map(x => x['order_id'])).size;
+
+            // Tambahkan dashboard langsung di sini
+            let dashboard = `
+            <div class="col">
+                <a href="/favorite" class="text-decoration-none">
+                    <div class="boxuser box-bg11 h-100">
+                        <div class="info">
+                            <h3 class="text-dark semibold">Favorit</h3>
+                            <p class="count regular">
+                                <b style="color: #f39c12;">${fav_rows.length}</b>
+                                <span class="text-dark fw-semibold">Item</span>
+                            </p>
+                        </div>
+                        <i class="fa-solid fa-heart text-dark"></i>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col">
+                <a href="/cart" class="text-decoration-none">
+                    <div class="boxuser box-bg22 h-100">
+                        <div class="info">
+                            <h3 class="text-dark semibold">Keranjang</h3>
+                            <p class="count regular">
+                                <b style="color: #27ae60;">${cart_rows.length}</b>
+                                <span class="text-dark fw-semibold">Item</span>
+                            </p>
+                        </div>
+                        <i class="fa-solid fa-cart-shopping text-dark"></i>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col">
+                <a href="/orders" class="text-decoration-none">
+                    <div class="boxuser box-bg33 h-100">
+                        <div class="info">
+                            <h3 class="text-dark semibold">Orderan</h3>
+                            <p class="count regular">
+                                <b style="color: #2980b9;">${order_count}</b>
+                                <span class="text-dark fw-semibold">Order</span>
+                            </p>
+                        </div>
+                        <i class="fa-solid fa-box text-dark"></i>
+                    </div>
+                </a>
+            </div>`;
+            $('#dashlog').append(dashboard);
+
+            $('#dashlog').after(`
+                <div class="section-divider my-5">
+                    <div class="divider-line"></div>
+                    <h4 class="fw-bold text-center mt-3">Daftar Produk</h4>
+                    <div class="divider-line"></div>
+                </div>
+            `);
+
             $('#card-book').empty(); // kosongkan sebelum append ulang
 
             for (let i = 0; i < rows.length; i++) {
@@ -522,10 +581,9 @@ function tampil_user() {
                 let harga = rows[i]['Harga'];
                 let kategori = rows[i]['Kategori'];
                 let stok = parseInt(rows[i]['Stok']);
-                let coverList = rows[i]['AllCover']; // array cover
+                let coverList = rows[i]['AllCover'];
                 let url = rows[i]['URL'];
 
-                // Tentukan status tombol keranjang
                 let cart_btn_html = '';
                 if (stok > 0) {
                     cart_btn_html = `<a onclick="keranjang('${url}')">
@@ -537,10 +595,8 @@ function tampil_user() {
                                      </a>`;
                 }
 
-                // Carousel logic
                 let carouselId = `carousel-${i}`;
                 let carouselHTML = '';
-
                 if (coverList.length > 1) {
                     let carouselItems = '';
                     for (let j = 0; j < coverList.length; j++) {
@@ -598,16 +654,12 @@ function tampil_user() {
                 $('#card-book').append(temp_html);
             }
 
-            // Update icon favorite
-            let fav_rows = response['daftarfavorite'];
             for (let i = 0; i < fav_rows.length; i++) {
                 let favurl = fav_rows[i]["JudulBuku"];
                 let fav_id = $(`#fav-${favurl}`);
                 fav_id.removeClass("far fa-heart").addClass("fas fa-heart");
             }
 
-            // Update icon keranjang (jika masih stok)
-            let cart_rows = response['daftarkeranjang'];
             for (let i = 0; i < cart_rows.length; i++) {
                 let carturl = cart_rows[i]["JudulBuku"];
                 let cart_id = $(`#cart-${carturl}`);
@@ -618,9 +670,6 @@ function tampil_user() {
         }
     });
 }
-
-
-
 
 // Page Cart
 function showcart() {
@@ -732,7 +781,7 @@ function showcart() {
 }
 
 function sebelumco() {
-    let dataPesanan = [];
+    let semuaItem = [];
     let pilihanHTML = '';
 
     $("[id^='harga-']").each(function (index) {
@@ -742,97 +791,51 @@ function sebelumco() {
         let judul = $(`#judul-${index}`).text().trim();
 
         if (jumlah > 0 && harga > 0) {
-            let idCheckbox = `item-${index}`;
-            dataPesanan.push({
-                id: idCheckbox,
+            semuaItem.push({
                 judul,
                 jumlah,
                 harga
             });
 
-            // ❗ Otomatis dicentang dengan "checked" di HTML
             pilihanHTML += `
-                <div class="form-check text-start">
-                    <input class="form-check-input item-checkbox" type="checkbox" value="${index}" id="${idCheckbox}" checked>
-                    <label class="form-check-label" for="${idCheckbox}">
-                        ${judul} (x${jumlah}) - Rp ${harga.toLocaleString('id-ID')}
-                    </label>
+                <div class="text-start mb-1">
+                    <i class="fa-solid fa-box me-2 text-secondary"></i>
+                    <strong>${judul}</strong> (x${jumlah}) - Rp ${harga.toLocaleString('id-ID')}
                 </div>
             `;
         }
     });
 
-    if (dataPesanan.length === 0) {
+    if (semuaItem.length === 0) {
         return Swal.fire({
             icon: 'error',
             title: 'Gagal!',
-            text: 'Tidak ada item yang dipilih',
+            text: 'Tidak ada item yang bisa di-checkout',
             confirmButtonColor: '#625f5f',
             confirmButtonText: 'OK'
         });
     }
 
     Swal.fire({
-        title: 'Pilih pesanan untuk checkout',
+        title: 'Konfirmasi Checkout',
         html: `
             <div class="mb-3 text-start">
-                <input type="checkbox" id="select-all" class="form-check-input me-2" checked>
-                <label for="select-all" class="form-check-label fw-bold">Pilih Semua</label>
+                Anda akan melakukan checkout untuk item berikut:
             </div>
-            <form id="form-pilihan">${pilihanHTML}</form>
+            ${pilihanHTML}
         `,
         showCancelButton: true,
         confirmButtonText: 'Checkout',
-        cancelButtonText: 'Batal',
-        didOpen: () => {
-            const selectAll = document.getElementById('select-all');
-            const checkboxes = document.querySelectorAll('.item-checkbox');
-
-            // Handle toggle semua checkbox
-            selectAll.addEventListener('change', () => {
-                checkboxes.forEach(cb => cb.checked = selectAll.checked);
-            });
-
-            // Jika user uncheck salah satu, uncheck "Pilih Semua"
-            checkboxes.forEach(cb => {
-                cb.addEventListener('change', () => {
-                    if (!cb.checked) {
-                        selectAll.checked = false;
-                    } else if ([...checkboxes].every(c => c.checked)) {
-                        selectAll.checked = true;
-                    }
-                });
-            });
-        },
-        preConfirm: () => {
-            let terpilih = [];
-            dataPesanan.forEach(item => {
-                if (document.getElementById(item.id).checked) {
-                    terpilih.push({
-                        judul: item.judul,
-                        jumlah: item.jumlah,
-                        harga: item.harga
-                    });
-                }
-            });
-
-            if (terpilih.length === 0) {
-                Swal.showValidationMessage('Pilih setidaknya satu item');
-            }
-
-            return terpilih;
-        }
+        cancelButtonText: 'Batal'
     }).then((result) => {
-        if (result.isConfirmed && result.value.length > 0) {
-            check_out(result.value);
+        if (result.isConfirmed) {
+            check_out(semuaItem); // Kirim semua item langsung
         }
     });
 }
 
-
-function check_out(para) {
+function check_out(dataPesanan) {
     let username = $.cookie('username');
-    let dataPesanan = para;
 
     $.ajax({
         type: 'POST',
@@ -1596,32 +1599,32 @@ function cekKetersediaanDescriptor(username) {
         },
         body: JSON.stringify({ username: encodeURIComponent(username) }) // Optional encode
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.result === 'ok') {
-            // Semua descriptor valid
-            placeholder.html(`
+        .then(response => response.json())
+        .then(data => {
+            if (data.result === 'ok') {
+                // Semua descriptor valid
+                placeholder.html(`
                 <span class="text-success fw-bold">✅ Wajah sudah terverifikasi</span>
             `);
-        } else {
-            // Descriptor tidak lengkap atau invalid
-            placeholder.html(`
+            } else {
+                // Descriptor tidak lengkap atau invalid
+                placeholder.html(`
                 <button onclick="openFaceModal()" class="btn btn-warning" id="btn-verifikasi-wajah">
                     🔄 Verifikasi Ulang
                 </button>
                 <div class="text-muted small mt-1">${data.msg || 'Silakan verifikasi ulang wajah Anda.'}</div>
             `);
-        }
-    })
-    .catch(err => {
-        console.error("Gagal cek descriptor:", err);
-        placeholder.html(`
+            }
+        })
+        .catch(err => {
+            console.error("Gagal cek descriptor:", err);
+            placeholder.html(`
             <button onclick="openFaceModal()" class="btn btn-danger" id="btn-verifikasi-wajah">
                 ⚠️ Gagal Cek Wajah, Coba Lagi
             </button>
             <div class="text-muted small mt-1">Tidak dapat terhubung ke server. Periksa koneksi internet Anda.</div>
         `);
-    });
+        });
 }
 
 // Page Regis User
@@ -1967,12 +1970,12 @@ function showorder() {
                                     <li class="list-group-item d-flex justify-content-between">
                                         <strong>Status:</strong>
                                         <span class="${status === 'dibatalkan' ? 'text-danger' :
-                                        status === 'belum bayar' ? 'text-warning' :
-                                        status === 'sudah bayar' ? 'text-info' :
-                                        status === 'menunggu pembayaran' ? 'text-primary' :
+                            status === 'belum bayar' ? 'text-warning' :
+                                status === 'sudah bayar' ? 'text-info' :
+                                    status === 'menunggu pembayaran' ? 'text-primary' :
                                         status === 'terkirim' ? 'text-success' :
-                                        status === 'pesanan selesai' ? 'text-muted' :
-                                        'text-secondary'}">
+                                            status === 'pesanan selesai' ? 'text-muted' :
+                                                'text-secondary'}">
                                             ${item.status}
                                         </span>
                                     </li>
@@ -2025,7 +2028,7 @@ function showorder() {
                             <div class="text-end mt-3">
                                 <strong>Batas Waktu: <span id="countdown-${id}" class="text-danger"></span></strong>
                             </div>` : ''
-                }
+                    }
                         ${tombolAksi}
                     </div>
                 `;

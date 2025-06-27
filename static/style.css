@@ -84,6 +84,11 @@ body {
   box-shadow: 0 4px 4px rgba(216, 65, 0, 0.5);
 }
 
+.box-bg3 {
+  border: 1px solid rgb(241, 255, 45);
+  box-shadow: 0 4px 4px rgba(241, 255, 45);
+}
+
 .dash {
   margin-top: 100px;
 }
@@ -662,4 +667,80 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.boxuser {
+  width: 100%;
+  height: 100%;
+  padding: 1.5rem 1.5rem 2rem 1.5rem;
+  /* atas-kanan-bawah-kiri */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 2px solid transparent;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.boxuser:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+}
+
+/* Icon styling */
+.boxuser i {
+  font-size: 2.5rem;
+  margin-top: 1rem;
+}
+
+/* Info text */
+.boxuser .info h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.boxuser .info .count b {
+  font-size: 1.1rem;
+}
+
+.boxuser .info .count a {
+  margin-left: 0.2rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Spacer between dashboard and product grid */
+#dashlog {
+  margin-bottom: 2.5rem;
+}
+
+.box-bg11 {
+  border-color: #3498dbca;
+}
+
+.box-bg22 {
+  border-color: #e67d22be;
+}
+
+.box-bg33 {
+  border-color: #f1c40fd1;
+}
+
+.section-divider {
+  width: 100%;
+  text-align: center;
+}
+
+.divider-line {
+  height: 3px;
+  background-color: #888;
+  /* atau coba #444 jika perlu lebih kontras */
+  margin: 0 auto;
+  width: 80%;
+  border-radius: 5px;
 }

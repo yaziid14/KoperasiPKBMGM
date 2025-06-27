@@ -75,15 +75,14 @@
                             <a href="#" onclick="sign_out()">Keluar</a>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
     </nav>
 
     <div class="container dash">
+        <h1 class="semibold judul1"></h1>
         <div class="row justify-content-center" id="dashlog">
-            <h1 class="semibold judul1"></h1>
         </div>
     </div>
 
@@ -123,7 +122,7 @@
     <script>
         gsap.registerPlugin(TextPlugin);
         gsap.from('.navbar', { duration: 1, y: '-100%', opacity: 0, ease: 'bounce' });
-        gsap.to('.judul1', { duration: 1, text: 'Silahkan pilih barang dibawah ini' })
+        gsap.to('.judul1', { duration: 1, text: 'Dashboard' })
         gsap.from('#card-book', { duration: 1, x: -100, opacity: 0, delay: 1 });
     </script>
 

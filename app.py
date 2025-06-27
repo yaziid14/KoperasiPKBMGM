@@ -321,7 +321,7 @@ def barang():
     favorite_list = list(db.favorite.find(
         {'username': user_receive}, {'_id': False}))
     cart_list = list(db.cart.find({'username': user_receive}, {'_id': False}))
-    order_list = list(db.orderan.find({}, {'_id': False}))
+    order_list = list(db.orderan.find({'username': user_receive}, {'_id': False}))
 
     return jsonify({
         'daftarbuku': book_list,
