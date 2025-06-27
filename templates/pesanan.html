@@ -182,7 +182,7 @@
 
     <!-- Modal Live Chat -->
     <div class="modal fade" id="liveChatModal" tabindex="-1" aria-labelledby="liveChatModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content shadow rounded-4">
                 <div class="modal-header text-white" style="background-color: #625f5f;">
                     <button type="button" class="btn text-white p-0 me-2" onclick="$('#liveChatModal').modal('hide')">
@@ -201,7 +201,7 @@
                     <div class="d-flex mt-3">
                         <input type="text" id="chatMessage" class="form-control me-2" placeholder="Ketik pesan..."
                             onkeydown="if(event.key==='Enter') sendMessage()">
-                        <button class="btn btn-secondary" onclick="sendMessage()">
+                        <button class="btn btn-info" onclick="sendMessage()">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
