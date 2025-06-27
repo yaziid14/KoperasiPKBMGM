@@ -2617,18 +2617,20 @@ function showorderadmin(filter = 'aktif') {
                     `;
                 }
 
-                let badgeDibatalkan = '';
+                let badgeStatus = '';
                 if (status === 'dibatalkan') {
-                    badgeDibatalkan = `
-                        <div class="position-absolute top-0 end-0 mt-2 me-3">
-                            <span class="badge bg-danger">❌ DIBATALKAN</span>
-                        </div>
+                    badgeStatus = `
+                        <div class="custom-badge bg-danger text-white">❌ DIBATALKAN</div>
+                    `;
+                } else if (status === 'pesanan selesai') {
+                    badgeStatus = `
+                        <div class="custom-badge bg-secondary text-white">✔️ SELESAI</div>
                     `;
                 }
 
                 let temp_html = `
                     <div class="card shadow-lg p-4 rounded-4 mb-4 position-relative" id="order-card-${id}">
-                        ${badgeDibatalkan}
+                        ${badgeStatus}
                         <h4 class="mb-3">${formatTanggal(waktu)} - <span class="text-primary">${username}</span></h4>
                         ${itemHTML}
                         ${tombolAksi}
