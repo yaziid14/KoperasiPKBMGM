@@ -54,35 +54,39 @@
         <section class="form-login">
             <h2 class="bold">LOGIN</h2>
             <hr>
-            <div class="in-group">
-                <div class="row mb-4 align-items-center">
-                    <div class="col-4 text-start">
-                        <label for="inputUsername" class="col-form-label semibold">Username</label>
+            <form onsubmit="sign_in(); return false;">
+                <div class="in-group">
+                    <div class="row mb-4 align-items-center">
+                        <div class="col-4 text-start">
+                            <label for="inputUsername" class="col-form-label semibold">Username</label>
+                        </div>
+                        <div class="col-8">
+                            <input type="text" id="inputUsername" class="form-control" required>
+                        </div>
                     </div>
-                    <div class="col-8">
-                        <input type="text" id="inputUsername" class="form-control">
+                    <div class="row mb-4 align-items-center">
+                        <div class="col-4 text-start">
+                            <label for="inputPassword" class="col-form-label semibold">Password</label>
+                        </div>
+                        <div class="col-8">
+                            <input type="password" id="inputPassword" class="form-control" required>
+                        </div>
                     </div>
                 </div>
-                <div class="row mb-4 align-items-center">
-                    <div class="col-4 text-start">
-                        <label for="inputPassword" class="col-form-label semibold">Password</label>
-                    </div>
-                    <div class="col-8">
-                        <input type="password" id="inputPassword" class="form-control"
-                            aria-describedby="passwordHelpInline">
-                    </div>
-                </div>
-            </div>
-            <button type="button" onclick="sign_in()" class="btn btn-login me-3"><span
-                    class="semibold">Login</span></button>
-            <a type="button" href="/" class="btn btn-back"><span class="semibold">Kembali</span></a>
+                <button type="submit" class="btn btn-login me-3">
+                    <span class="semibold">Login</span>
+                </button>
+                <a href="/" class="btn btn-back">
+                    <span class="semibold">Kembali</span>
+                </a>
+            </form>
         </section>
-        <div style="text-align: center;">
+
+        <div class="text-center mt-3">
             <a href="/registuser" class="link-regis semibold">Belum Punya Akun?</a>
         </div>
-    </div>
 
-    <script defer src="{{ url_for('static', filename='js/myjs.js') }}"></script>
+        <script defer src="{{ url_for('static', filename='js/myjs.js') }}"></script>
 
 </body>
 
