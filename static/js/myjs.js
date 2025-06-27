@@ -2047,8 +2047,7 @@ function showorder(filter = 'aktif') {
                         ${(status === 'belum bayar' || status === 'menunggu pembayaran') ? `
                         <div class="text-end mt-3">
                             <strong>Batas Waktu: <span id="countdown-${id}" class="text-danger"></span></strong>
-                        </div>` : ''
-                    }
+                        </div>` : ''}
 
                     }
                         ${tombolAksi}
@@ -2670,6 +2669,9 @@ function showorderadmin(filter = 'aktif') {
                 `;
 
                 $('#showoderanadmin').append(temp_html);
+                if (status === 'belum bayar' || status === 'menunggu pembayaran') {
+                    startCountdown(id, waktu);
+                }
             }
         },
         error: function () {
