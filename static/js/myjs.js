@@ -410,8 +410,11 @@ function tampil_admin() {
             let rows1 = response['daftaruser'];
             let rows2 = response['daftarorder'];
 
-            let count = rows2.length;
+            // Hitung jumlah pengguna
             let count1 = rows1.length;
+
+            // Hitung jumlah order unik berdasarkan order_id
+            let order_count = new Set(rows2.filter(x => x['order_id']).map(x => x['order_id'])).size;
 
             let dashboard = `
                 <div class="box box-bg1 my-2 mx-2">
@@ -427,7 +430,10 @@ function tampil_admin() {
                 <div class="box box-bg2 my-2 mx-2">
                     <div class="info">
                         <h3 class="semibold">Transaksi</h3>
-                        <p class="count regular"><b style="color: #d8410080;">${count}</b> <a href="#" onclick="lihatOrder()" class="text-decoration-none text-dark fw-semibold">Orders</a></p>
+                        <p class="count regular">
+                            <b style="color: #d8410080;">${order_count}</b>
+                            <a href="#" onclick="lihatOrder()" class="text-decoration-none text-dark fw-semibold">Orders</a>
+                        </p>
                     </div>
                     <i class="fa fa-shopping-cart"></i>
                 </div>`;
@@ -438,11 +444,9 @@ function tampil_admin() {
                 let harga = rows[i]['Harga'];
                 let stok = rows[i]['Stok'];
                 let url = rows[i]['URL'];
-                let coverList = rows[i]['AllCover']; // array of image paths
+                let coverList = rows[i]['AllCover'];
 
                 let carouselId = `carousel-${i}`;
-
-                // Carousel Items
                 let carouselItems = '';
                 for (let j = 0; j < coverList.length; j++) {
                     carouselItems += `
@@ -452,9 +456,7 @@ function tampil_admin() {
                 }
 
                 let carouselHTML = '';
-
                 if (coverList.length > 1) {
-                    // Show full carousel with controls
                     carouselHTML = `
                     <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
                         <div class="carousel-inner">
@@ -470,7 +472,6 @@ function tampil_admin() {
                         </button>
                     </div>`;
                 } else {
-                    // Only show single image, no carousel needed
                     carouselHTML = `
                     <div>
                         <img src="${coverList[0]}" class="d-block w-100 card-book-img1" alt="cover-0">
@@ -487,7 +488,7 @@ function tampil_admin() {
                             ${judul}
                             </h5>
                             <h6>Stok : ${stok}</h6>
-                            <h5 class="regular harga">Rp.${harga.toLocaleString('id-ID')}</h5>
+                            <h5 class="regular harga">Rp.${Number(harga).toLocaleString('id-ID')}</h5>
                         </div>
                         <div class="d-flex justify-content-center">
                             <a href="/edit/${url}" class="btn semibold card-admin-btn" style="background-color: #0A868C;">Edit</a>
@@ -497,7 +498,6 @@ function tampil_admin() {
                 </div>`;
                 $('#card-book').append(temp_html);
             }
-
         }
     });
 }
@@ -515,7 +515,8 @@ function tampil_user() {
             let rows = response['daftarbuku'];
             let fav_rows = response['daftarfavorite'];
             let cart_rows = response['daftarkeranjang'];
-            let order_count = new Set(response['daftarorder'].map(x => x['order_id'])).size;
+            let rows2 = response['daftarorder'];
+            let order_count = new Set(rows2.filter(x => x['order_id']).map(x => x['order_id'])).size;
 
             // Tambahkan dashboard langsung di sini
             let dashboard = `
