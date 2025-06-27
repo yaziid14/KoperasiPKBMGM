@@ -2492,7 +2492,7 @@ function filterOrderStatus(status) {
     $('#orderFilter button').removeClass('active');
 
     if (status === 'aktif') $('#orderFilter button:eq(0)').addClass('active');
-    else if (status === 'sudah bayar') $('#orderFilter button:eq(1)').addClass('active');
+    else if (status === 'pesanan selesai') $('#orderFilter button:eq(1)').addClass('active');
     else if (status === 'dibatalkan') $('#orderFilter button:eq(2)').addClass('active');
 
     showorderadmin(status);
