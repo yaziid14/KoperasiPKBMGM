@@ -1323,6 +1323,8 @@ def hapus_pesanan_kadaluarsa():
     Hapus pesanan 'belum bayar' atau 'menunggu pembayaran' yang kadaluarsa >24 jam.
     """
     try:
+        print("🔍 Menjalankan pengecekan pesanan kadaluarsa...")
+        
         batas_waktu = datetime.now(ZoneInfo("UTC")) - timedelta(hours=24)
         hasil = db.orderan.delete_many({
             "status": {"$in": ["Belum Bayar", "Menunggu Pembayaran"]},
