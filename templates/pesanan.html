@@ -52,8 +52,22 @@
                 faceapi.nets.faceLandmark68Net.loadFromUri('/static/models')
             ]);
         };
+        function filterOrder(button, status) {
+            // Hapus semua class 'active' di tombol filter
+            $('#filter-buttons button').removeClass('active');
+
+            // Tambahkan class 'active' hanya pada tombol yang diklik
+            $(button).addClass('active');
+
+            // Tampilkan pesanan sesuai filter
+            showorder(status);
+        }
         $(document).ready(function () {
-            showorder();
+            const defaultBtn = $('#filter-buttons button').first();
+            defaultBtn.addClass('active');
+
+            const defaultStatus = 'belum bayar';
+            showorder(defaultStatus);
         });
     </script>
 
@@ -100,24 +114,25 @@
 
     <div class="container m-top-100">
         <div class="row justify-content-center">
-            <a href="javascript:void(0)" onclick="showorder()" class="text-decoration-none text-dark">
-                <h1 class="extrabold">Pesanan</h1>
-            </a>
-            <p class="mt-3 text-end">
-                <a href="javascript:void(0)" onclick="showorderDibatalkan()"
-                    class="text-decoration-none me-3 text-danger fw-semibold">🔴
-                    Lihat Pesanan Dibatalkan</a>
-                <a href="javascript:void(0)" onclick="showorderSelesai()"
-                    class="text-decoration-none text-success fw-semibold">✅ Lihat
-                    Pesanan Selesai</a>
-            </p>
+            <h1 class="extrabold">Pesanan</h1>
+            <div class="d-flex flex-wrap gap-2 mb-4 justify-content-center" id="filter-buttons">
+                <button type="button" class="btn btn-outline-warning" onclick="filterOrder(this, 'belum bayar')">⏳ Belum
+                    Bayar</button>
+                <button type="button" class="btn btn-outline-primary"
+                    onclick="filterOrder(this, 'menunggu pembayaran')">💳 Menunggu Pembayaran</button>
+                <button type="button" class="btn btn-outline-info" onclick="filterOrder(this, 'sudah bayar')">✅ Sudah
+                    Bayar</button>
+                <button type="button" class="btn btn-outline-success" onclick="filterOrder(this, 'terkirim')">📦
+                    Terkirim</button>
+                <button type="button" class="btn btn-outline-secondary"
+                    onclick="filterOrder(this, 'pesanan selesai')">📝 Selesai</button>
+                <button type="button" class="btn btn-outline-danger" onclick="filterOrder(this, 'dibatalkan')">❌
+                    Dibatalkan</button>
+            </div>
         </div>
     </div>
 
-    <div class="container mt-3 mb-5" id="showoderan">
-
-    </div>
-
+    <div class="container mt-3 mb-5" id="showoderan"></div>
 
     <!-- Modal Konfirmasi Logout -->
     <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">

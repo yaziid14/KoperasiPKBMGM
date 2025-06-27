@@ -1876,7 +1876,7 @@ function formatTanggal(datetimeStr) {
     return `${day} ${month} ${year} | ${hours}:${minutes}`;
 }
 
-function showorder() {
+function showorder(filter = 'aktif') {
     $.ajax({
         type: 'GET',
         url: '/showorder',
@@ -1909,17 +1909,20 @@ function showorder() {
                 return dateB - dateA;
             }).reverse();
 
-            let jumlahAktif = 0; // Tambahkan counter
+            let jumlahAktif = 0;
 
             for (let [key, group] of sortedGroups) {
                 let { order_id: id, tanggal: waktu } = group[0];
                 let status = group[0].status.toLowerCase();
 
-                if (status === 'pesanan selesai' || status === 'dibatalkan') {
+                // 🔽 Filter status: kalau 'aktif' => selain 'pesanan selesai' & 'dibatalkan'
+                if (filter === 'aktif') {
+                    if (status === 'pesanan selesai' || status === 'dibatalkan') continue;
+                } else if (status !== filter) {
                     continue;
                 }
 
-                jumlahAktif++; // Hanya tambah jika status bukan dibatalkan/selesai
+                jumlahAktif++;
 
                 let totalSemua = 0;
                 let jumlahSemua = 0;
@@ -2041,7 +2044,6 @@ function showorder() {
                 }
             }
 
-            // Jika tidak ada order aktif tersisa
             if (jumlahAktif === 0) {
                 container.html(`
                     <div class="text-center text-muted my-5 fade-in-animation">
