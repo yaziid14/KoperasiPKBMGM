@@ -46,8 +46,10 @@
         window.onload = function () {
             no_login();
             check_admin();
-            showorderadmin();
         };
+        $(document).ready(() => {
+            filterOrderStatus('aktif'); // Default: tampilkan pesanan aktif
+        });
     </script>
 
     <style>
@@ -55,6 +57,11 @@
             border: 3px solid #ccc;
             padding: 4px;
             border-radius: 12px;
+        }
+
+        #orderFilter .btn.active {
+            border-width: 2px;
+            opacity: 1;
         }
     </style>
 </head>
@@ -85,6 +92,11 @@
         <div class="row justify-content-center">
             <h1 class="extrabold">Pesanan User</h1>
         </div>
+    </div>
+    <div class="d-flex justify-content-center my-4 gap-2 flex-wrap" id="orderFilter">
+        <button class="btn btn-outline-secondary active" onclick="filterOrderStatus('aktif')">📋 Aktif</button>
+        <button class="btn btn-outline-success" onclick="filterOrderStatus('sudah bayar')">✅ Selesai</button>
+        <button class="btn btn-outline-danger" onclick="filterOrderStatus('dibatalkan')">❌ Dibatalkan</button>
     </div>
     <div class="container mt-3 mb-5" id="showoderanadmin"></div>
 
@@ -208,7 +220,7 @@
                 Swal.fire("Error", "Kesalahan saat mengirim pesan", "error");
             }
         }
-        
+
         function getCookie(name) {
             let cookieArr = document.cookie.split(";");
             for (let i = 0; i < cookieArr.length; i++) {

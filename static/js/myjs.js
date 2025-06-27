@@ -2479,7 +2479,17 @@ function hapusPesanan(orderId) {
     });
 }
 
-function showorderadmin() {
+function filterOrderStatus(status) {
+    $('#orderFilter button').removeClass('active');
+
+    if (status === 'aktif') $('#orderFilter button:eq(0)').addClass('active');
+    else if (status === 'sudah bayar') $('#orderFilter button:eq(1)').addClass('active');
+    else if (status === 'dibatalkan') $('#orderFilter button:eq(2)').addClass('active');
+
+    showorderadmin(status);
+}
+
+function showorderadmin(filter = 'aktif') {
     $.ajax({
         type: 'GET',
         url: '/dbadmin',
@@ -2507,9 +2517,16 @@ function showorderadmin() {
 
             for (let [key, group] of sortedGroups) {
                 let { order_id: id, tanggal: waktu } = group[0];
+                let status = group[0].status.toLowerCase();
+
+                if (statusFilter === 'aktif') {
+                    if (status === 'sudah bayar' || status === 'dibatalkan') continue;
+                } else if (status !== statusFilter) {
+                    continue;
+                }
+
                 let totalSemua = 0;
                 let jumlahSemua = 0;
-                let status = group[0].status.toLowerCase();
                 let username = group[0].username;
 
                 let itemHTML = group.map((item, idx) => {
@@ -2526,7 +2543,7 @@ function showorderadmin() {
 
                     for (let i = 0; i < covers.length; i++) {
                         let activeClass = i === 0 ? 'active' : '';
-                        indicators += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${i + 1}"></button>`;
+                        indicators += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-label="Slide ${i + 1}"></button>`;
                         inner += `<div class="carousel-item ${activeClass}"><img src="${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
                     }
 
@@ -2559,7 +2576,7 @@ function showorderadmin() {
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <strong>Status:</strong>
-                                        <span class="${status === 'belum bayar' ? 'text-danger' : (status === 'dibatalkan' ? 'text-danger' : 'text-success')}">${item.status}</span>
+                                        <span class="${status === 'belum bayar' ? 'text-warning' : (status === 'dibatalkan' ? 'text-danger' : 'text-success')}">${item.status}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -2567,7 +2584,6 @@ function showorderadmin() {
                     `;
                 }).join('');
 
-                // Tombol Aksi Admin
                 let tombolAksi = '';
                 if (status === 'sudah bayar') {
                     let tombolList = [];
@@ -2582,11 +2598,7 @@ function showorderadmin() {
 
                     tombolList.push(`<button class="btn btn-outline-info" onclick="chatUser('${id}', '${username}')">💬 Chat User</button>`);
 
-                    tombolAksi = `
-                        <div class="d-flex justify-content-center gap-2 mt-3">
-                            ${tombolList.join('')}
-                        </div>
-                    `;
+                    tombolAksi = `<div class="d-flex justify-content-center gap-2 mt-3">${tombolList.join('')}</div>`;
                 } else {
                     tombolAksi = `
                         <div class="d-flex justify-content-center mt-3">
@@ -2595,7 +2607,6 @@ function showorderadmin() {
                     `;
                 }
 
-                // Label dibatalkan
                 let badgeDibatalkan = '';
                 if (status === 'dibatalkan') {
                     badgeDibatalkan = `
@@ -2622,6 +2633,7 @@ function showorderadmin() {
         }
     });
 }
+
 
 function lihatUser() {
     $.ajax({
