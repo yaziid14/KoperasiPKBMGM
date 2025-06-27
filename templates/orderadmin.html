@@ -176,17 +176,15 @@
                 chatBox.innerHTML = '';
 
                 if (data.result === 'success') {
-                    const currentUser = getCookie('username');
-
                     data.chat.forEach(c => {
-                        const roleClass = c.username === currentUser ? 'admin' : 'user';
+                        const roleClass = c.role === 'admin' ? 'admin' : 'user';
 
                         chatBox.innerHTML += `
-                <div class="chat-message ${roleClass}">
-                    <div class="sender-name"><b>${c.username}</b></div>
-                    <div class="bubble">${c.message}</div>
-                    <div class="timestamp">${formatTime(c.timestamp)}</div>
-                </div>`;
+                        <div class="chat-message ${roleClass}">
+                            <div class="sender-name"><b>${c.username}</b></div>
+                            <div class="bubble">${c.message}</div>
+                            <div class="timestamp">${formatTime(c.timestamp)}</div>
+                        </div>`;
                     });
                 } else {
                     chatBox.innerHTML = `<div class='text-center text-danger'>${data.message}</div>`;
@@ -197,6 +195,7 @@
                 console.error("Error loading chat:", err);
             }
         }
+
 
         async function sendAdminMessage() {
             const message = document.getElementById("adminChatMessage").value.trim();
