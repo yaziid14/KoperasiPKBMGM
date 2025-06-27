@@ -2519,9 +2519,10 @@ function showorderadmin(filter = 'aktif') {
                 let { order_id: id, tanggal: waktu } = group[0];
                 let status = group[0].status.toLowerCase();
 
-                if (statusFilter === 'aktif') {
+                // Perbaikan disini:
+                if (filter === 'aktif') {
                     if (status === 'sudah bayar' || status === 'dibatalkan') continue;
-                } else if (status !== statusFilter) {
+                } else if (status !== filter) {
                     continue;
                 }
 
