@@ -63,6 +63,38 @@
             border-width: 2px;
             opacity: 1;
         }
+
+        /* Chat admin di kanan */
+        .chat-message.admin {
+            text-align: right;
+            margin-left: auto;
+        }
+
+        .chat-message.admin .bubble {
+            background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+            color: white;
+            border-bottom-right-radius: 0;
+        }
+
+        .chat-message.admin .timestamp {
+            text-align: right;
+        }
+
+        /* Chat user di kiri */
+        .chat-message.user {
+            text-align: left;
+            margin-right: auto;
+        }
+
+        .chat-message.user .bubble {
+            background-color: #f1f3f5;
+            color: #333;
+            border-bottom-left-radius: 0;
+        }
+
+        .chat-message.user .timestamp {
+            text-align: left;
+        }
     </style>
 </head>
 
