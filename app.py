@@ -111,7 +111,8 @@ def get_chat():
         {
             'username': c['username'],
             'message': c['message'],
-            'timestamp': c['timestamp']  # sudah dalam string format
+            'timestamp': c['timestamp'],
+            'role': c['role']
         }
         for c in chat_cursor
     ]
@@ -1324,7 +1325,7 @@ def hapus_pesanan_kadaluarsa():
     """
     try:
         print("🔍 Menjalankan pengecekan pesanan kadaluarsa...")
-        
+
         batas_waktu = datetime.now(ZoneInfo("UTC")) - timedelta(hours=24)
         hasil = db.orderan.delete_many({
             "status": {"$in": ["Belum Bayar", "Menunggu Pembayaran"]},
