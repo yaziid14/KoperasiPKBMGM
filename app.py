@@ -373,20 +373,6 @@ def hapus_user():
             except Exception as e:
                 print(f"Gagal menghapus gambar profil Cloudinary: {e}")
 
-    # Hapus semua descriptor wajah (format .npy di Cloudinary)
-    descriptor_list = user_data.get("descriptors", [])
-    for desc in descriptor_list:
-        file_url = desc.get("url", "")
-        if file_url and "res.cloudinary.com" in file_url:
-            public_id = extract_public_id(file_url)
-            if public_id:
-                try:
-                    result = cloudinary.uploader.destroy(
-                        public_id, resource_type="raw", invalidate=True)
-                    print(f"Hapus descriptor: {public_id} → {result}")
-                except Exception as e:
-                    print(f"Gagal menghapus descriptor Cloudinary: {e}")
-
     # Hapus user dari semua koleksi terkait
     db.login.delete_one({'username': username})
     db.cart.delete_many({'username': username})
@@ -1179,59 +1165,40 @@ def search(kata):
 @app.route('/simpan-wajah', methods=['POST'])
 def simpan_wajah():
     try:
-        data = request.json
+        data = request.get_json()
         username = data.get('username')
-        descriptors = data.get('descriptors')  # Harus berupa list of list (5 descriptor)
+        descriptors = data.get('descriptors')  # list of 5 descriptor (array of 128 floats)
 
+        # Validasi dasar
         if not username or not descriptors or len(descriptors) != 5:
-            return jsonify({"result": "error", "msg": "Diperlukan 5 descriptor lengkap"}), 400
+            return jsonify({
+                "result": "error",
+                "msg": "Diperlukan 5 descriptor lengkap dan username"
+            }), 400
 
-        descriptor_urls = []
-        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-
-        for i, descriptor in enumerate(descriptors):
-            try:
-                np_bytes_io = io.BytesIO()
-                np.save(np_bytes_io, np.array(descriptor))
-                np_bytes_io.seek(0)
-
-                public_id = f"face_descriptors/{username}/{username}_{timestamp}_{i+1}"
-
-                result = cloudinary.uploader.upload(
-                    np_bytes_io,
-                    resource_type="raw",
-                    public_id=public_id,
-                    overwrite=False
-                )
-
-                file_url = result.get("secure_url")
-                if not file_url:
-                    return jsonify({"result": "error", "msg": f"Upload descriptor ke-{i+1} gagal (tidak ada URL)"}), 500
-
-                descriptor_urls.append({
-                    "url": file_url,
-                    "uploaded": datetime.now()
-                })
-
-            except Exception as upload_err:
-                return jsonify({"result": "error", "msg": f"Upload descriptor ke-{i+1} gagal: {str(upload_err)}"}), 500
-
-        # Simpan ke database
+        # Simpan langsung ke MongoDB
         db.login.update_one(
             {"username": username},
             {
                 "$set": {
                     "verifikasi": True,
-                    "descriptors": descriptor_urls
+                    "descriptors": descriptors,
+                    "updated_at": datetime.now()
                 }
             },
             upsert=True
         )
 
-        return jsonify({"result": "success", "msg": "✅ Semua descriptor berhasil disimpan dan verifikasi selesai."})
+        return jsonify({
+            "result": "success",
+            "msg": "✅ Semua descriptor berhasil disimpan di MongoDB."
+        })
 
     except Exception as e:
-        return jsonify({"result": "error", "msg": f"Gagal menyimpan descriptor: {str(e)}"}), 500
+        return jsonify({
+            "result": "error",
+            "msg": f"Gagal menyimpan descriptor: {str(e)}"
+        }), 500
 
 
 @app.route("/api/verifikasi-wajah", methods=["GET"])
@@ -1259,21 +1226,15 @@ def cek_descriptor():
             return jsonify({"result": "error", "msg": "Data descriptor tidak ditemukan"}), 200
 
         descriptors = user["descriptors"]
-        if len(descriptors) != 5:
+
+        if not isinstance(descriptors, list) or len(descriptors) != 5:
             return jsonify({"result": "error", "msg": "Jumlah descriptor tidak lengkap (harus 5)"}), 200
 
-        for d in descriptors:
-            url = d.get("url")
-            if not url:
-                return jsonify({"result": "error", "msg": "Ada descriptor tanpa URL"}), 200
-            try:
-                response = requests.head(url, timeout=3)
-                if response.status_code != 200:
-                    return jsonify({"result": "error", "msg": "Ada descriptor tidak tersedia di Cloudinary"}), 200
-            except:
-                return jsonify({"result": "error", "msg": "Gagal mengakses salah satu descriptor"}), 200
+        for i, desc in enumerate(descriptors):
+            if not isinstance(desc, list) or len(desc) != 128:
+                return jsonify({"result": "error", "msg": f"Descriptor ke-{i+1} tidak valid"}), 200
 
-        return jsonify({"result": "ok", "msg": "Semua descriptor valid"}), 200
+        return jsonify({"result": "ok", "msg": "✅ Semua descriptor valid"}), 200
 
     except Exception as e:
         return jsonify({"result": "error", "msg": f"Gagal cek descriptor: {str(e)}"}), 500
@@ -1284,12 +1245,12 @@ def verifikasi_wajah():
     try:
         data = request.json
         username = data.get('username')
-        descriptor_client = np.array(data.get('descriptor'))  # array dari JS
+        descriptor_client = np.array(data.get('descriptor'))  # array dari client
 
         if not username or descriptor_client is None:
             return jsonify({"result": "error", "msg": "Data tidak lengkap"}), 400
 
-        # Ambil semua descriptor dari MongoDB
+        # Ambil descriptor dari MongoDB
         user_data = db.login.find_one({"username": username})
         if not user_data or "descriptors" not in user_data:
             return jsonify({"result": "error", "msg": "Data descriptor tidak ditemukan"}), 404
@@ -1297,28 +1258,15 @@ def verifikasi_wajah():
         threshold = 0.6
         matched = False
 
-        for descriptor_info in user_data["descriptors"]:
-            file_url = descriptor_info.get("url")
-            if not file_url:
-                continue
-
+        for saved_descriptor in user_data["descriptors"]:
             try:
-                # Ambil file dari Cloudinary
-                response = requests.get(file_url)
-                if response.status_code != 200:
-                    continue
-
-                npy_data = BytesIO(response.content)
-                descriptor_saved = np.load(npy_data)
-
-                # Hitung jarak Euclidean
-                distance = np.linalg.norm(descriptor_saved - descriptor_client)
+                descriptor_np = np.array(saved_descriptor)
+                distance = np.linalg.norm(descriptor_np - descriptor_client)
                 if distance < threshold:
                     matched = True
                     break
-
             except Exception as e:
-                print(f"Gagal membaca descriptor dari URL: {file_url} — {e}")
+                print(f"Gagal membandingkan descriptor: {e}")
                 continue
 
         if matched:

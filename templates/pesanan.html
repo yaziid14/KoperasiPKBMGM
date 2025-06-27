@@ -223,14 +223,14 @@
                 video.srcObject = stream;
 
                 video.onloadedmetadata = () => {
-                    video.play();
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
+                    video.play().then(() => {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
 
-                    // Mulai capture setelah wajah stabil
-                    setTimeout(() => {
-                        captureDescriptorForBayar(orderid, tanggal);
-                    }, 700);
+                        setTimeout(() => {
+                            captureDescriptorForBayar(orderid, tanggal);
+                        }, 700);
+                    });
                 };
             } catch (err) {
                 Swal.fire("Kamera Gagal", "Tidak bisa membuka kamera: " + err.message, "error");
@@ -293,6 +293,10 @@
 
             const descriptor = Array.from(detection.descriptor);
             progressBar.value = 1;
+            if (!descriptor || descriptor.length !== 128) {
+                Swal.fire("Error", "Descriptor tidak valid. Silakan coba lagi.", "error");
+                return;
+            }
 
             // Kirim ke backend Flask sesuai struktur: { username, descriptor }
             $.ajax({

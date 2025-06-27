@@ -1571,33 +1571,55 @@ function profile() {
     }
 }
 
-// Cek ketersediaan file descriptor di Cloudinary
+// Fungsi untuk mengecek status verifikasi wajah user berdasarkan descriptor di backend
 function cekKetersediaanDescriptor(username) {
+    const placeholder = $("#verifikasi-wajah-placeholder");
+
+    // Validasi username
+    if (!username) {
+        placeholder.html(`
+            <span class="text-danger">❌ Username tidak ditemukan</span>
+        `);
+        return;
+    }
+
+    // Tampilkan loading sementara
+    placeholder.html(`
+        <span class="text-secondary">⏳ Memeriksa status verifikasi wajah...</span>
+    `);
+
+    // Kirim permintaan ke backend
     fetch('/cek-descriptor', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username: username })
+        body: JSON.stringify({ username: encodeURIComponent(username) }) // Optional encode
     })
     .then(response => response.json())
     .then(data => {
         if (data.result === 'ok') {
             // Semua descriptor valid
-            $("#verifikasi-wajah-placeholder").html(`
+            placeholder.html(`
                 <span class="text-success fw-bold">✅ Wajah sudah terverifikasi</span>
             `);
         } else {
-            // Descriptor tidak lengkap/invalid → tampilkan tombol verifikasi ulang
-            $("#verifikasi-wajah-placeholder").html(`
-                <button onclick="openFaceModal()" class="btn btn-warning" id="btn-verifikasi-wajah">🔄 Verifikasi Ulang</button>
+            // Descriptor tidak lengkap atau invalid
+            placeholder.html(`
+                <button onclick="openFaceModal()" class="btn btn-warning" id="btn-verifikasi-wajah">
+                    🔄 Verifikasi Ulang
+                </button>
+                <div class="text-muted small mt-1">${data.msg || 'Silakan verifikasi ulang wajah Anda.'}</div>
             `);
         }
     })
     .catch(err => {
         console.error("Gagal cek descriptor:", err);
-        $("#verifikasi-wajah-placeholder").html(`
-            <button onclick="openFaceModal()" class="btn btn-danger" id="btn-verifikasi-wajah">⚠️ Gagal Cek Wajah, Coba Lagi</button>
+        placeholder.html(`
+            <button onclick="openFaceModal()" class="btn btn-danger" id="btn-verifikasi-wajah">
+                ⚠️ Gagal Cek Wajah, Coba Lagi
+            </button>
+            <div class="text-muted small mt-1">Tidak dapat terhubung ke server. Periksa koneksi internet Anda.</div>
         `);
     });
 }
