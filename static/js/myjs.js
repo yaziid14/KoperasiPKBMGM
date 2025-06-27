@@ -2118,8 +2118,13 @@ function pesananSelesai(orderid) {
                 })
                 .then(data => {
                     if (data.result === 'success') {
-                        Swal.fire("Sukses", "Status pesanan telah diperbarui.", "success")
-                            .then(() => showorder()); // Refresh setelah user klik OK
+                        Swal.fire({
+                            title: "Sukses",
+                            text: "Status pesanan telah diperbarui.",
+                            icon: "success",
+                            timer: 1000,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
                     } else {
                         Swal.fire("Gagal", data.message || "Terjadi kesalahan.", "error");
                     }
@@ -2199,7 +2204,7 @@ function batalkanPesanan(id) {
                         timer: 2000,
                         timerProgressBar: true
                     });
-                    showorder();
+                    location.reload();
                 },
                 error: function () {
                     alert("Gagal mengajukan pembatalan pesanan.");
@@ -2233,7 +2238,7 @@ function batalkanPermintaanPembatalan(id) {
                         timer: 2000,
                         timerProgressBar: true
                     });
-                    showorder(); // refresh tampilan
+                    location.reload();
                 },
                 error: function () {
                     Swal.fire({
@@ -2284,7 +2289,7 @@ function pembayaran(orderid, tanggal) {
                             timer: 1000,
                             timerProgressBar: true
                         });
-                        showorder();
+                        location.reload();
                     },
                     onPending: function () {
                         Swal.fire({
@@ -2309,7 +2314,7 @@ function pembayaran(orderid, tanggal) {
                         });
                     },
                     onClose: function () {
-                        alert('Kamu menutup popup pembayaran.');
+                        // alert('Kamu menutup popup pembayaran.');
                         Swal.fire({
                             toast: true,
                             position: 'top-start',
@@ -2319,7 +2324,7 @@ function pembayaran(orderid, tanggal) {
                             timer: 1000,
                             timerProgressBar: true
                         });
-                        return showorder();
+                        location.reload();
                     }
                 });
             } else {
@@ -2352,7 +2357,7 @@ function lanjutkanPembayaran(orderId) {
                             timer: 1000,
                             timerProgressBar: true
                         });
-                        showorder();
+                        location.reload();
                     },
                     onPending: function (result) {
                         Swal.fire({
