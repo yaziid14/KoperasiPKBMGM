@@ -2620,11 +2620,15 @@ function showorderadmin(filter = 'aktif') {
                 let badgeStatus = '';
                 if (status === 'dibatalkan') {
                     badgeStatus = `
-                        <div class="custom-badge bg-danger text-white">❌ DIBATALKAN</div>
+                        <div class="position-absolute top-0 end-0 mt-2 me-3">
+                            <span class="badge bg-danger">❌ DIBATALKAN</span>
+                        </div>
                     `;
                 } else if (status === 'pesanan selesai') {
                     badgeStatus = `
-                        <div class="custom-badge bg-secondary text-white">✔️ SELESAI</div>
+                        <div class="position-absolute top-0 end-0 mt-2 me-3">
+                            <span class="badge bg-success">✔️ SELESAI</span>
+                        </div>
                     `;
                 }
 
