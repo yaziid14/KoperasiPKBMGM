@@ -2530,7 +2530,7 @@ function showorderadmin(filter = 'aktif') {
 
                 // Perbaikan disini:
                 if (filter === 'aktif') {
-                    if (status === 'sudah bayar' || status === 'dibatalkan') continue;
+                    if (status === 'pesanan selesai' || status === 'dibatalkan') continue;
                 } else if (status !== filter) {
                     continue;
                 }
