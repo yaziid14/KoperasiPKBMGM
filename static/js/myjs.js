@@ -1878,8 +1878,12 @@ function showorder() {
         url: '/showorder',
         success: function (response) {
             let rows = response['daftarorderan'];
+            const container = $('#showoderan');
+
+            container.empty();
+
             if (!rows || rows.length === 0) {
-                $('#showoderan').html(`
+                container.html(`
                     <div class="text-center text-muted my-5 fade-in-animation">
                         <i class="fa-solid fa-box-open fa-3x mb-3"></i><br>
                         <h5>Belum ada orderan</h5>
@@ -1887,8 +1891,6 @@ function showorder() {
                 `);
                 return;
             }
-
-            $('#showoderan').empty();
 
             let groupedOrders = {};
             for (let item of rows) {
@@ -1903,6 +1905,8 @@ function showorder() {
                 return dateB - dateA;
             }).reverse();
 
+            let jumlahAktif = 0; // Tambahkan counter
+
             for (let [key, group] of sortedGroups) {
                 let { order_id: id, tanggal: waktu } = group[0];
                 let status = group[0].status.toLowerCase();
@@ -1910,6 +1914,8 @@ function showorder() {
                 if (status === 'pesanan selesai' || status === 'dibatalkan') {
                     continue;
                 }
+
+                jumlahAktif++; // Hanya tambah jika status bukan dibatalkan/selesai
 
                 let totalSemua = 0;
                 let jumlahSemua = 0;
@@ -1961,12 +1967,12 @@ function showorder() {
                                     <li class="list-group-item d-flex justify-content-between">
                                         <strong>Status:</strong>
                                         <span class="${status === 'dibatalkan' ? 'text-danger' :
-                            status === 'belum bayar' ? 'text-warning' :
-                                status === 'sudah bayar' ? 'text-info' :
-                                    status === 'menunggu pembayaran' ? 'text-primary' :
+                                        status === 'belum bayar' ? 'text-warning' :
+                                        status === 'sudah bayar' ? 'text-info' :
+                                        status === 'menunggu pembayaran' ? 'text-primary' :
                                         status === 'terkirim' ? 'text-success' :
-                                            status === 'pesanan selesai' ? 'text-muted' :
-                                                'text-secondary'}">
+                                        status === 'pesanan selesai' ? 'text-muted' :
+                                        'text-secondary'}">
                                             ${item.status}
                                         </span>
                                     </li>
@@ -1976,7 +1982,6 @@ function showorder() {
                     `;
                 }).join('');
 
-                // Tombol Pembatalan
                 let tombolPembatalan = '';
                 if (status === 'sudah bayar') {
                     if (statusPembatalan === 'diajukan') {
@@ -1988,7 +1993,6 @@ function showorder() {
                     tombolPembatalan = `<button class="btn btn-outline-success" onclick="pesananSelesai('${id}')">✅ Pesanan Selesai</button>`;
                 }
 
-                // Tombol Aksi
                 let tombolAksi = '';
                 if (status === 'belum bayar') {
                     tombolAksi = `
@@ -2021,16 +2025,26 @@ function showorder() {
                             <div class="text-end mt-3">
                                 <strong>Batas Waktu: <span id="countdown-${id}" class="text-danger"></span></strong>
                             </div>` : ''
-                    }
+                }
                         ${tombolAksi}
                     </div>
                 `;
 
-                $('#showoderan').append(temp_html);
+                container.append(temp_html);
 
                 if (status === 'belum bayar' || status === 'menunggu pembayaran') {
                     startCountdown(id, waktu);
                 }
+            }
+
+            // Jika tidak ada order aktif tersisa
+            if (jumlahAktif === 0) {
+                container.html(`
+                    <div class="text-center text-muted my-5 fade-in-animation">
+                        <i class="fa-solid fa-box-open fa-3x mb-3"></i><br>
+                        <h5>Belum ada orderan</h5>
+                    </div>
+                `);
             }
         },
         error: function () {
