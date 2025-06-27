@@ -2028,10 +2028,12 @@ function showorder(filter = 'aktif') {
                     <div class="card shadow-lg p-4 rounded-4 mb-4 position-relative" id="order-card-${id}">
                         <h4 class="mb-3">${formatTanggal(waktu)}</h4>
                         ${itemHTML}
-                        ${status === 'belum bayar' ? `
-                            <div class="text-end mt-3">
-                                <strong>Batas Waktu: <span id="countdown-${id}" class="text-danger"></span></strong>
-                            </div>` : ''
+                        ${(status === 'belum bayar' || status === 'menunggu pembayaran') ? `
+                        <div class="text-end mt-3">
+                            <strong>Batas Waktu: <span id="countdown-${id}" class="text-danger"></span></strong>
+                        </div>` : ''
+                    }
+
                     }
                         ${tombolAksi}
                     </div>
