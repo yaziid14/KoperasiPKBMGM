@@ -511,7 +511,7 @@ body {
   max-width: 80%;
   padding-left: 10px;
   padding-right: 10px;
-  animation: fadeIn 0.3s ease-in;
+  /* animation: fadeIn 0.3s ease-in; */
 }
 
 .chat-message .sender-name {
