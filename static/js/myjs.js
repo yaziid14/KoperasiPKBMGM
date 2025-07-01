@@ -333,6 +333,11 @@ function keranjang(para) {
     }
 }
 
+function handleEnter(event) {
+    if (event.key === "Enter") {
+        cari(); // memanggil fungsi cari()
+    }
+}
 
 function cari() {
     let kata = $("#cari").val()
