@@ -334,9 +334,8 @@ function keranjang(para) {
 }
 
 function handleEnter(event) {
-    if (event.key === "Enter") {
-        cari(); // memanggil fungsi cari()
-    }
+    event.preventDefault(); // mencegah form reload
+    cari(); // panggil fungsi pencarian
 }
 
 function cari() {
@@ -348,12 +347,14 @@ function cari() {
             icon: 'warning',
             title: 'Kata masih kosong',
             showConfirmButton: false,
-            timer: 2000,
+            timer: 1000,
             timerProgressBar: true
         });
     }
-    let url = kata.replaceAll(/[^0-9a-zA-Z -]/g, '').toLowerCase();
-    let url1 = url.replaceAll(' ', '-');
+    let url = kata
+        .replaceAll(/[^0-9a-zA-Z\s-]/g, '') // buang karakter aneh
+        .trim()
+        .toLowerCase()
     window.location.href = `/search/${url}`
 }
 
