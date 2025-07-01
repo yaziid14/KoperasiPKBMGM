@@ -48,7 +48,56 @@
 </head>
 
 <body>
-    <nav class="navbar fixed-top navbar-expand bg-nav" id="navadmindetail">
+        <nav class="navbar fixed-top navbar-expand bg-nav">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#" onclick="check_role()">
+                <img src="{{ url_for('static', filename='logo2.jpg') }}" alt="Logo" height="55" width="200">
+            </a>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
+                <div class="navbar-nav">
+                    <form class="d-flex" onsubmit="handleEnter(event)">
+                        <div class="form-control me-4 form-nav">
+                            <input class="inp-nav" placeholder="Mencari Sesuatu?" aria-label="Search" id="cari">
+                            <a href="javascript:void(0);" onclick="cari()">
+                                <i class="fa fa-search fa-lg icon-src-nav" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                <div id="navadmindetail">
+                    <div class="d-flex">
+                        <a class="nav-link active semibold me-3" style="color: white;" aria-current="page"
+                            href="/tambah">Input
+                            Item</a>
+                        <a class="nav-link semibold" style="color: wheat; cursor: pointer;"
+                            onclick="sign_out()">Keluar</a>
+                    </div>
+                </div>
+                <div id="navuserdetail">
+                    <a href="/favorite"><i class="fa fa-heart fa-2x me-4" aria-hidden="true"
+                            style="color: white;"></i></a>
+                    <a href="/cart"><i class="fa fa-shopping-cart fa-2x me-4" aria-hidden="true"
+                            style="color: white;"></i></a>
+                    <div class="dropdown">
+                        <button onclick="toggleDropdown()" class="profile-btn">
+                            <i class="fa fa-user fa-2x me-2" aria-hidden="true" style="color: bisque;"></i>
+                        </button>
+                        <div id="profileDropdown" class="dropdown-content">
+                            <a href="/profile">Profil Saya</a>
+                            <a href="/orders">Pesanan Saya</a>
+                            <a href="#" onclick="sign_out()">Keluar</a>
+                        </div>
+                    </div>
+                </div>
+                <div id="navnotuserdetail">
+                    <a href="/login"><i class="fa fa-sign-in fa-3x me-2" style="color: white;"
+                            aria-hidden="true"></i></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- <nav class="navbar fixed-top navbar-expand bg-nav" id="navadmindetail">
         <div class="container-fluid">
             <a class="navbar-brand" href="#" onclick="check_role()">
                 <img src="{{ url_for('static', filename='logo2.jpg') }}" alt="Logo" height="55" width="200">
@@ -126,7 +175,7 @@
                 </div>
             </div>
         </div>
-    </nav>
+    </nav> -->
 
     <div class="container dash">
         <div class="row" id="detailbuku"></div>

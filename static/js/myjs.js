@@ -339,7 +339,14 @@ function handleEnter(event) {
 }
 
 function cari() {
-    let kata = $("#cari").val()
+    let role = $.cookie('role');
+
+    // Cek apakah role bukan 'admin' atau 'user'
+    if (role !== 'admin' && role !== 'user') {
+        return window.location.href = '/login';
+    }
+
+    let kata = $("#cari").val();
     if (!kata) {
         return Swal.fire({
             toast: true,
@@ -351,11 +358,13 @@ function cari() {
             timerProgressBar: true
         });
     }
+
     let url = kata
         .replaceAll(/[^0-9a-zA-Z\s-]/g, '') // buang karakter aneh
         .trim()
-        .toLowerCase()
-    window.location.href = `/search/${url}`
+        .toLowerCase();
+
+    window.location.href = `/search/${url}`;
 }
 
 function deleteadm(para) {
@@ -953,21 +962,27 @@ function minus(para1, para2, para3, para4) {
     }
 }
 
-
 // Page Detail
 function roledetail() {
     let role = $.cookie('role');
+
+    // Sembunyikan semua terlebih dahulu
     $('#navadmindetail').hide();
     $('#navuserdetail').hide();
+    $('#navnotuserdetail').hide(); // pastikan ada juga ID ini
+
     if (role === 'admin') {
         $('#navadmindetail').show();
-        $('#navnotuserdetail').hide();
-    }
-    if (role === 'user') {
+        // $('#navnotuserdetail').hide();
+    } else if (role === 'user') {
         $('#navuserdetail').show();
-        $('#navnotuserdetail').hide();
+        // $('#navnotuserdetail').hide();
+    } else {
+        // Jika bukan admin atau user (misal null, guest, dll)
+        $('#navnotuserdetail').show();
     }
 }
+
 
 function detail() {
     let judul = detail_book['JudulBuku'];
