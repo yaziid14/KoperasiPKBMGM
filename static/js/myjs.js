@@ -2048,8 +2048,6 @@ function showorder(filter = 'aktif') {
                         <div class="text-end mt-3">
                             <strong>Batas Waktu: <span id="countdown-${id}" class="text-danger"></span></strong>
                         </div>` : ''}
-
-                    }
                         ${tombolAksi}
                     </div>
                 `;
