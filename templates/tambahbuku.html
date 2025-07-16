@@ -137,7 +137,7 @@
                     </div>
                     <div class="col-md-6">
                         <label for="harga" class="form-label">Harga Barang</label>
-                        <input type="number" class="form-control" id="harga" name="harga" placeholder="Contoh: 5000">
+                        <input type="number" class="form-control" id="harga" name="harga" placeholder="Contoh: 5000" min="1">
                     </div>
                     <div class="col-12">
                         <label for="deskripsi" class="form-label">Deskripsi Barang</label>
@@ -146,15 +146,13 @@
                     </div>
                     <div class="col-md-6">
                         <label for="stok" class="form-label">Stok Barang</label>
-                        <input type="number" class="form-control" id="stok" name="stok" placeholder="Contoh: 20">
+                        <input type="number" class="form-control" id="stok" name="stok" placeholder="Contoh: 20" min="1">
                     </div>
                     <div class="col-md-6">
                         <label for="kategori" class="form-label">Kategori Barang</label>
                         <select id="kategori" name="kategori" class="form-select">
                             <option selected disabled>Pilih kategori...</option>
                             <option value="ATK">ATK</option>
-                            <option value="Makanan">Makanan</option>
-                            <option value="Minuman">Minuman</option>
                             <option value="Seragam">Seragam</option>
                             <option value="Alat Multimedia">Alat Multimedia</option>
                             <option value="Lainnya">Lainnya</option>

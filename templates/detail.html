@@ -48,7 +48,7 @@
 </head>
 
 <body>
-        <nav class="navbar fixed-top navbar-expand bg-nav">
+    <nav class="navbar fixed-top navbar-expand bg-nav">
         <div class="container-fluid">
             <a class="navbar-brand" href="#" onclick="check_role()">
                 <img src="{{ url_for('static', filename='logo2.jpg') }}" alt="Logo" height="55" width="200">
@@ -74,13 +74,11 @@
                     </div>
                 </div>
                 <div id="navuserdetail">
-                    <a href="/favorite"><i class="fa fa-heart fa-2x me-4" aria-hidden="true"
-                            style="color: white;"></i></a>
-                    <a href="/cart"><i class="fa fa-shopping-cart fa-2x me-4" aria-hidden="true"
-                            style="color: white;"></i></a>
+                    <a href="/favorite"><i class="fa fa-heart fa-2x me-4 nav-heart" aria-hidden="true"></i></a>
+                    <a href="/cart"><i class="fa fa-shopping-cart fa-2x me-4 nav-cart" aria-hidden="true"></i></a>
                     <div class="dropdown">
                         <button onclick="toggleDropdown()" class="profile-btn">
-                            <i class="fa fa-user fa-2x me-2" aria-hidden="true" style="color: bisque;"></i>
+                            <i class="fa fa-user fa-2x me-2 nav-profile" aria-hidden="true"></i>
                         </button>
                         <div id="profileDropdown" class="dropdown-content">
                             <a href="/profile">Profil Saya</a>

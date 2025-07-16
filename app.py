@@ -151,7 +151,7 @@ def sign_in():
     else:
         return jsonify({
             "result": "fail",
-            "msg": "Username tidak ditemukan",
+            "msg": "username_not_found",  # ini agar JS bisa menangani dengan swal.fire khusus
             "error": "username"
         })
 

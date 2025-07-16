@@ -62,26 +62,22 @@
                         </div>
                     </form>
                 </div>
-                <div id="right-nav">
-                    <a href="/favorite"><i class="fa fa-heart fa-2x me-4" aria-hidden="true"
-                            style="color: white;"></i></a>
-                    <a href="/cart"><i class="fa fa-shopping-cart fa-2x me-4" aria-hidden="true"
-                            style="color: white;"></i></a>
-                    <div class="dropdown">
-                        <button onclick="toggleDropdown()" class="profile-btn">
-                            <i class="fa fa-user fa-2x me-2" aria-hidden="true" style="color: bisque;"></i>
-                        </button>
-                        <div id="profileDropdown" class="dropdown-content">
-                            <a href="/profile">Profil Saya</a>
-                            <a href="/orders">Pesanan Saya</a>
-                            <a href="#" onclick="sign_out()">Keluar</a>
-                        </div>
+                <a href="/favorite"><i class="fa fa-heart fa-2x me-4 nav-heart" aria-hidden="true"></i></a>
+                <a href="/cart"><i class="fa fa-shopping-cart fa-2x me-4 nav-cart" aria-hidden="true"></i></a>
+                <div class="dropdown">
+                    <button onclick="toggleDropdown()" class="profile-btn">
+                        <i class="fa fa-user fa-2x me-2 nav-profile" aria-hidden="true"></i>
+                    </button>
+                    <div id="profileDropdown" class="dropdown-content">
+                        <a href="/profile">Profil Saya</a>
+                        <a href="/orders">Pesanan Saya</a>
+                        <a href="#" onclick="sign_out()">Keluar</a>
                     </div>
                 </div>
             </div>
         </div>
     </nav>
-
+    
     <div class="container dash">
         <h1 class="semibold judul1"></h1>
         <div class="row justify-content-center" id="dashlog">

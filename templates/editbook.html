@@ -44,6 +44,15 @@
             edit();
         });
     </script>
+    <style>
+        #preview-container img {
+            width: 75px;
+            height: 75px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+    </style>
 </head>
 
 <body>
@@ -208,6 +217,25 @@
                         text: 'Terjadi kesalahan saat mengupdate data.'
                     });
                 }
+            });
+        }
+
+        function previewGambar() {
+            const input = document.getElementById('gambar-buku');
+            const previewContainer = document.getElementById('preview-container');
+            previewContainer.innerHTML = '';
+
+            const files = input.files;
+            if (!files.length) return;
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    previewContainer.appendChild(img);
+                };
+                reader.readAsDataURL(file);
             });
         }
     </script>

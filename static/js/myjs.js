@@ -1,6 +1,29 @@
 function sign_in() {
     let username = $('#inputUsername').val();
+    if (!username) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi username anda',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
+        });
+    }
+
     let password = $('#inputPassword').val();
+    if (!password) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi password anda',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
+        });
+    }
 
     $.ajax({
         type: "POST",
@@ -11,12 +34,16 @@ function sign_in() {
         },
         success: function (response) {
             if (response["result"] === "success") {
+                // Clear existing cookies
                 $.removeCookie('mytoken', { path: '/' });
                 $.removeCookie('role', { path: '/' });
+
+                // Set new cookies
                 $.cookie("mytoken", response["token"], { path: "/" });
                 $.cookie("role", response["role"], { path: "/" });
                 $.cookie("username", response["username"], { path: "/" });
 
+                // Redirect based on role
                 if (response["role"] === "admin") {
                     window.location.replace("/adminpage");
                 } else if (response["role"] === "user") {
@@ -25,8 +52,14 @@ function sign_in() {
                     window.location.replace("/");
                 }
             } else {
-                let titleMsg = response["msg"];
+                let titleMsg = 'Terjadi kesalahan';
                 let iconType = 'error';
+
+                if (response["msg"] === "username_not_found") {
+                    titleMsg = 'Username belum terdaftar';
+                } else if (response["msg"]) {
+                    titleMsg = response["msg"];
+                }
 
                 Swal.fire({
                     toast: true,
@@ -34,11 +67,217 @@ function sign_in() {
                     icon: iconType,
                     title: titleMsg,
                     showConfirmButton: false,
-                    timer: 1500,
+                    timer: 1000,
                     timerProgressBar: true
                 });
             }
         },
+        error: function () {
+            Swal.fire({
+                toast: true,
+                position: 'top-start',
+                icon: 'error',
+                title: 'Terjadi kesalahan koneksi ke server',
+                showConfirmButton: false,
+                timer: 1500,
+                timerProgressBar: true
+            });
+        }
+    });
+}
+
+// Page Regis User
+function masuk() {
+    let username = $('#inputUsername').val().trim();
+    if (!username) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan input username',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
+        });
+    }
+
+    let password = $('#inputPassword').val().trim();
+    if (password.length < 8) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'error',
+            title: 'Password minimal 8 karakter',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true
+        });
+    }
+
+    let email = $('#inputEmail').val().trim();
+    let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'error',
+            title: 'Format email tidak valid',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
+        });
+    }
+
+    let helpId = $("#helpId");
+    if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-user")) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan cek ID anda terlebih dahulu',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
+        });
+    } else if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-xmark")) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Cek kembali ID anda..',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
+        });
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "/ruser",
+        data: {
+            email: email,
+            username_give: username,
+            password_give: password
+        },
+        success: function (response) {
+            Swal.fire({
+                toast: true,
+                position: 'top-start',
+                icon: 'success',
+                title: 'Kamu telah mendaftar sebagai User, terima kasih..',
+                showConfirmButton: false,
+                timer: 1000,
+                timerProgressBar: true
+            });
+            window.location.replace("/login");
+        }
+    });
+}
+
+// Page Regis Admin
+function masukadmin() {
+    let username = $('#inputUsername').val().trim();
+    if (!username) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan isi username anda',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
+        });
+    }
+
+    let password = $('#inputPassword').val().trim();
+    if (password.length < 8) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'error',
+            title: 'Password minimal 8 karakter',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true
+        });
+    }
+
+
+    let email = $('#inputEmail').val().trim();
+    let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'error',
+            title: 'Format email tidak valid',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
+        });
+    }
+
+    let nomor = $('#inputNomor').val().trim();
+    let nomorRegex = /^[0-9]{9,15}$/;
+
+    if (!nomorRegex.test(nomor)) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'error',
+            title: 'Nomor handphone tidak valid (9-15 digit angka)',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true
+        });
+    }
+
+    let helpId = $("#helpId");
+    if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-user")) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Silahkan cek ID terlebih dahulu',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
+        });
+    } else if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-xmark")) {
+        return Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Username sudah digunakan. Gunakan username lain.',
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true
+        });
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "/radmin",
+        data: {
+            email: email,
+            nomor_give: nomor,
+            username_give: username,
+            password_give: password
+        },
+        success: function (response) {
+            Swal.fire({
+                toast: true,
+                position: 'top-start',
+                icon: 'success',
+                title: 'Kamu telah mendaftar sebagai Admin, terima kasih',
+                showConfirmButton: false,
+                timer: 1000,
+                timerProgressBar: true
+            });
+            window.location.replace("/login");
+        }
     });
 }
 
@@ -770,7 +1009,10 @@ function showcart() {
                                     <i class="fas fa-minus"></i>
                                 </button>
 
-                                <h5 class="mb-0 fw-bold" id="jumlah-${i}" style="min-width: 40px; text-align: center;">1</h5>
+                                <input type="number" id="jumlah-${i}" value="1" min="1"
+                                    class="form-control text-center fw-bold"
+                                    style="width: 60px; max-width: 100%; font-size: 1.25rem;"
+                                    onchange="updateJumlah('#jumlah-${i}', '#harga-${i}', '#ori-${i}', '${stok}')">
 
                                 <button type="button" class="btn btn-success rounded-circle btn-lg tombol-jumlah"
                                     onclick="plus('#jumlah-${i}', '#harga-${i}', '#ori-${i}', '${stok}')">
@@ -794,6 +1036,95 @@ function showcart() {
             $('#keranjang1').html(grid_wrapper);
         }
     });
+}
+
+function plus(jumlahSelector, hargaSelector, oriSelector, stok) {
+    const input = $(jumlahSelector);
+    let angka = Number(input.val() || input.text());
+
+    if (angka >= stok) {
+        Swal.fire({
+            toast: true,
+            position: 'top-start',
+            icon: 'warning',
+            title: 'Melebihi Stok!',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+        return;
+    }
+
+    angka++;
+    input.val(angka); // jika input field
+    input.text(angka); // jika elemen biasa
+    updateJumlah(jumlahSelector, hargaSelector, oriSelector, stok);
+}
+
+function minus(jumlahSelector, hargaSelector, oriSelector, judulOrStok) {
+    const input = $(jumlahSelector);
+    let angka = Number(input.val() || input.text());
+
+    if (angka === 1) {
+        let judul = judulOrStok;
+        let username = $.cookie("username");
+        $.ajax({
+            type: 'POST',
+            url: '/addcart',
+            data: {
+                judul_give: judul,
+                username_give: username,
+                action_give: "delete"
+            },
+            success: function (response) {
+                if (response.result === 'success') {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-start',
+                        icon: 'info',
+                        title: 'Terhapus dari keranjang',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    showcart();
+                } else {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-start',
+                        icon: 'error',
+                        title: 'Ada yang salah',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                }
+            }
+        });
+    } else {
+        angka--;
+        input.val(angka);
+        input.text(angka);
+        updateJumlah(jumlahSelector, hargaSelector, oriSelector, judulOrStok);
+    }
+}
+
+function updateJumlah(jumlahSelector, hargaSelector, oriSelector, stok) {
+    const jumlahInput = $(jumlahSelector);
+    let jumlah = Number(jumlahInput.val() || jumlahInput.text());
+    const hargaOri = Number($(oriSelector).text());
+
+    // Validasi nilai
+    if (isNaN(jumlah) || jumlah < 1) jumlah = 1;
+    if (jumlah > parseInt(stok)) jumlah = parseInt(stok);
+
+    // Update input field atau text node
+    jumlahInput.val(jumlah);
+    jumlahInput.text(jumlah);
+
+    // Hitung total harga
+    const total = jumlah * hargaOri;
+    $(hargaSelector).text(`Rp.${total.toLocaleString('id-ID')}`);
 }
 
 function sebelumco() {
@@ -826,7 +1157,7 @@ function sebelumco() {
         return Swal.fire({
             icon: 'error',
             title: 'Gagal!',
-            text: 'Tidak ada item yang bisa di-checkout',
+            text: 'Tidak ada item yang dipilih',
             confirmButtonColor: '#625f5f',
             confirmButtonText: 'OK'
         });
@@ -886,80 +1217,6 @@ function check_out(dataPesanan) {
             }
         }
     });
-}
-
-function plus(para1, para2, para3, stok) {
-    let angka = Number($(para1).text());
-    if (angka >= stok) {
-        Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Melebihi Stok!',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true
-        });
-        return;
-    }
-
-    let jumlah = angka + 1;
-
-    // Ambil harga asli dari hidden field
-    let hargaori = Number($(para3).text());
-
-    let total = jumlah * hargaori;
-
-    $(para1).text(`${jumlah}`);
-    $(para2).text(`Rp.${total.toLocaleString('id-ID')}`);
-}
-
-function minus(para1, para2, para3, para4) {
-    let angka = Number($(para1).text());
-    if (angka === 1) {
-        let judul = para4;
-        let username = $.cookie("username");
-        $.ajax({
-            type: 'POST',
-            url: '/addcart',
-            data: {
-                judul_give: judul,
-                username_give: username,
-                action_give: "delete"
-            },
-            success: function (response) {
-                if (response.result === 'success') {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-start',
-                        icon: 'info',
-                        title: 'Terhapus dari keranjang',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: true
-                    });
-                    showcart();
-                } else {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-start',
-                        icon: 'error',
-                        title: 'Ada yang salah',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: true
-                    });
-                }
-            }
-        });
-    } else {
-        let jumlah = angka - 1;
-        let hargaori = Number($(para3).text());
-        let total = jumlah * hargaori;
-
-        $(para1).text(`${jumlah}`);
-        $(para2).text(`Rp.${total.toLocaleString('id-ID')}`);
-    }
 }
 
 // Page Detail
@@ -1118,13 +1375,14 @@ function edit() {
             </div>
             ${controls}
         </div>
-        <div class="d-flex">
+        <div class="d-flex align-items-center">
             <div class="custom-file-input">
                 <label for="gambar-buku">Pilih File</label>
-                <input type="file" id="gambar-buku" name="gambar-buku" multiple accept="image/*">
+                <input type="file" id="gambar-buku" name="gambar-buku" multiple accept="image/*" onchange="previewGambar()" class="form-control">
             </div>
             <button onclick="editgambar()" class="btn btn-login ms-3" style="max-width: 110px;">Perbarui</button>
         </div>
+        <div id="preview-container" class="d-flex flex-wrap gap-2 mt-3"></div>
     </div>
 
     <div class="col-7">
@@ -1140,11 +1398,11 @@ function edit() {
             </div>
             <div class="form-group">
                 <label for="harga">Harga Barang:</label>
-                <input class="me-4" type="number" id="harga" name="harga" value="${harga}">
+                <input class="me-4" type="number" id="harga" name="harga" value="${harga}" min="1">
             </div>
             <div class="form-group">
                 <label for="stok">Stok Barang:</label>
-                <input class="me-4" type="number" id="stok" name="stok" value="${stok}">
+                <input class="me-4" type="number" id="stok" name="stok" value="${stok}" min="1">
             </div>
             <div class="form-group">
                 <label for="kategori">Kategori Barang:</label>
@@ -1152,8 +1410,6 @@ function edit() {
                     <option value="${kategori}">${kategori}</option>
                     <option value="..." disabled>...</option>
                     <option value="ATK">ATK</option>
-                    <option value="Makanan">Makanan</option>
-                    <option value="Minuman">Minuman</option>
                     <option value="Seragam">Seragam</option>
                     <option value="Alat Multimedia">Alat Multimedia</option>
                     <option value="Lainnya">Lainnya</option>
@@ -1360,9 +1616,9 @@ function tampil() {
                             <h5 class="regular py-2 harga" id="harga">Rp.${harga.toLocaleString('id-ID')}</h5>
                         </div>
                         <div class="d-flex justify-content-between px-2 pb-3">
-                            <a onclick="kelogin()"><i class="far fa-heart fa-2x"></i></a>
+                            <a onclick="kelogin()"><i class="far fa-heart fa-2x nolog-btn"></i></a>
                             <a href="/detail/${url}" class="btn semibold card-body-btn">Detail</a>
-                            <a onclick="kelogin()"><i class="fas fa-cart-plus fa-2x"></i></a>
+                            <a onclick="kelogin()"><i class="fas fa-cart-plus fa-2x nolog-btn"></i></a>
                         </div>
                     </div>
                 </div>`;
@@ -1422,112 +1678,6 @@ function update_profile() {
                 window.location.reload();
             }
         },
-    });
-}
-
-// Page Regis Admin
-function masukadmin() {
-    let username = $('#inputUsername').val().trim();
-    if (!username) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan isi username anda',
-            showConfirmButton: false,
-            timer: 1000,
-            timerProgressBar: true
-        });
-    }
-
-    let password = $('#inputPassword').val().trim();
-    if (password.length < 8) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'error',
-            title: 'Password minimal 8 karakter',
-            showConfirmButton: false,
-            timer: 1500,
-            timerProgressBar: true
-        });
-    }
-
-
-    let email = $('#inputEmail').val().trim();
-    let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'error',
-            title: 'Format email tidak valid',
-            showConfirmButton: false,
-            timer: 1000,
-            timerProgressBar: true
-        });
-    }
-
-    let nomor = $('#inputNomor').val().trim();
-    let nomorRegex = /^[0-9]{9,15}$/;
-
-    if (!nomorRegex.test(nomor)) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'error',
-            title: 'Nomor handphone tidak valid (9-15 digit angka)',
-            showConfirmButton: false,
-            timer: 1500,
-            timerProgressBar: true
-        });
-    }
-
-    let helpId = $("#helpId");
-    if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-user")) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan cek ID terlebih dahulu',
-            showConfirmButton: false,
-            timer: 1000,
-            timerProgressBar: true
-        });
-    } else if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-xmark")) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Username sudah digunakan. Gunakan username lain.',
-            showConfirmButton: false,
-            timer: 1000,
-            timerProgressBar: true
-        });
-    }
-
-    $.ajax({
-        type: "POST",
-        url: "/radmin",
-        data: {
-            email: email,
-            nomor_give: nomor,
-            username_give: username,
-            password_give: password
-        },
-        success: function (response) {
-            Swal.fire({
-                toast: true,
-                position: 'top-start',
-                icon: 'success',
-                title: 'Kamu telah mendaftar sebagai Admin, terima kasih',
-                showConfirmButton: false,
-                timer: 1000,
-                timerProgressBar: true
-            });
-            window.location.replace("/login");
-        }
     });
 }
 
@@ -1647,95 +1797,6 @@ function cekKetersediaanDescriptor(username) {
             <div class="text-muted small mt-1">Tidak dapat terhubung ke server. Periksa koneksi internet Anda.</div>
         `);
         });
-}
-
-// Page Regis User
-function masuk() {
-    let username = $('#inputUsername').val().trim();
-    if (!username) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan isi username anda',
-            showConfirmButton: false,
-            timer: 1000,
-            timerProgressBar: true
-        });
-    }
-
-    let password = $('#inputPassword').val().trim();
-    if (password.length < 8) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'error',
-            title: 'Password minimal 8 karakter',
-            showConfirmButton: false,
-            timer: 1500,
-            timerProgressBar: true
-        });
-    }
-
-    let email = $('#inputEmail').val().trim();
-    let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'error',
-            title: 'Format email tidak valid',
-            showConfirmButton: false,
-            timer: 1000,
-            timerProgressBar: true
-        });
-    }
-
-    let helpId = $("#helpId");
-    if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-user")) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Silahkan cek ID anda terlebih dahulu',
-            showConfirmButton: false,
-            timer: 1000,
-            timerProgressBar: true
-        });
-    } else if (helpId.hasClass("fa-solid") && helpId.hasClass("fa-xmark")) {
-        return Swal.fire({
-            toast: true,
-            position: 'top-start',
-            icon: 'warning',
-            title: 'Cek kembali ID anda..',
-            showConfirmButton: false,
-            timer: 1000,
-            timerProgressBar: true
-        });
-    }
-
-    $.ajax({
-        type: "POST",
-        url: "/ruser",
-        data: {
-            email: email,
-            username_give: username,
-            password_give: password
-        },
-        success: function (response) {
-            Swal.fire({
-                toast: true,
-                position: 'top-start',
-                icon: 'success',
-                title: 'Kamu telah mendaftar sebagai User, terima kasih..',
-                showConfirmButton: false,
-                timer: 1000,
-                timerProgressBar: true
-            });
-            window.location.replace("/login");
-        }
-    });
 }
 
 // Page Search
@@ -3104,3 +3165,27 @@ function showorderSelesai() {
         }
     });
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+
+    numberInputs.forEach(input => {
+        // Cegah karakter huruf & simbol saat diketik
+        input.addEventListener('keydown', function (e) {
+            const allowedKeys = [
+                'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight',
+                'Tab', 'Home', 'End'
+            ];
+            const isNumber = /^[0-9]$/.test(e.key);
+
+            if (!isNumber && !allowedKeys.includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        // Cegah karakter aneh saat input via paste
+        input.addEventListener('input', function () {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    });
+});
