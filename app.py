@@ -324,7 +324,8 @@ def barang():
     favorite_list = list(db.favorite.find(
         {'username': user_receive}, {'_id': False}))
     cart_list = list(db.cart.find({'username': user_receive}, {'_id': False}))
-    order_list = list(db.orderan.find({'username': user_receive}, {'_id': False}))
+    order_list = list(db.orderan.find(
+        {'username': user_receive}, {'_id': False}))
 
     return jsonify({
         'daftarbuku': book_list,
@@ -435,7 +436,15 @@ def tambahbuku():
             result = cloudinary.uploader.upload(
                 file,
                 folder="cover_buku",      # Folder ditentukan di sini
-                public_id=public_id       # Tanpa "cover_buku/" di public_id
+                public_id=public_id,       # Tanpa "cover_buku/" di public_id
+                transformation=[
+                    {
+                        "width": 500,
+                        "height": 500,
+                        "crop": "fill",   # "fill" akan memotong bagian yang berlebih
+                        "gravity": "auto"  # otomatis fokus ke bagian penting
+                    }
+                ]
             )
         except Exception as e:
             return jsonify({'msg': f"Gagal upload {filename}: {str(e)}"}), 500
@@ -1050,25 +1059,26 @@ def editcover():
     if not databarang:
         return jsonify({'msg': 'Data tidak ditemukan!'})
 
-    # Dapatkan daftar cover lama
+    # Ambil daftar cover lama
     cover_old_list = databarang.get("AllCover", [])
     if isinstance(cover_old_list, str):
         cover_old_list = [cover_old_list]
 
-    # Hapus cover lama dari Cloudinary
-    for old_url in cover_old_list:
-        if old_url and "res.cloudinary.com" in old_url:
-            public_id = extract_public_id(old_url)
-            if public_id:
-                try:
-                    result = cloudinary.uploader.destroy(public_id)
-                    print(f"Hapus cover lama: {public_id} → {result}")
-                except Exception as e:
-                    print(f"Gagal menghapus cover lama: {e}")
+    # Hapus semua cover lama dari Cloudinary
+    if cover_old_list:
+        for old_url in cover_old_list:
+            if old_url and "res.cloudinary.com" in old_url:
+                public_id = extract_public_id(old_url)
+                if public_id:
+                    try:
+                        result = cloudinary.uploader.destroy(public_id)
+                        print(f"Hapus cover lama: {public_id} → {result}")
+                    except Exception as e:
+                        print(f"Gagal menghapus cover lama: {e}")
 
     # Ambil file cover baru
     files = request.files.getlist("gambar_give[]")
-    if not files or files[0].filename == "":
+    if not files or all(f.filename == '' for f in files):
         return jsonify({'msg': 'Gambar tidak ditemukan!'})
 
     cover_list = []
@@ -1082,23 +1092,36 @@ def editcover():
         if extension not in ['jpg', 'jpeg', 'png', 'webp']:
             return jsonify({'msg': f'File tidak valid: {filename}'})
 
-        # ✅ Gunakan public_id TANPA "cover_buku/"
         public_id = f"{url_receive}_{timestamp}_{index+1}"
 
-        result = cloudinary.uploader.upload(
-            file,
-            public_id=public_id,
-            folder="cover_buku"  # Sudah mengatur foldernya di sini
-        )
+        try:
+            result = cloudinary.uploader.upload(
+                file,
+                folder="cover_buku",
+                public_id=public_id,
+                transformation=[
+                    {
+                        "width": 500,
+                        "height": 500,
+                        "crop": "fill",
+                        "gravity": "auto"
+                    }
+                ]
+            )
+        except Exception as e:
+            print(f"Gagal upload {filename}: {e}")
+            return jsonify({'msg': f'Gagal upload {filename} ke Cloudinary'})
 
+        # Ambil URL yang sudah dioptimasi
         optimized_url, _ = cloudinary_url(
-            f"cover_buku/{public_id}",  # ✅ Tambahkan prefix DI SINI saja
+            f"cover_buku/{public_id}",
             fetch_format="auto",
             quality="auto"
         )
         cover_list.append(optimized_url)
+        print(f"Upload berhasil: {optimized_url}")
 
-    # Update dokumen di database
+    # Update ke database
     new_doc = {
         "AllCover": cover_list,
         "Cover": cover_list[0]
@@ -1179,7 +1202,8 @@ def simpan_wajah():
     try:
         data = request.get_json()
         username = data.get('username')
-        descriptors = data.get('descriptors')  # list of 5 descriptor (array of 128 floats)
+        # list of 5 descriptor (array of 128 floats)
+        descriptors = data.get('descriptors')
 
         # Validasi dasar
         if not username or not descriptors or len(descriptors) != 5:
@@ -1257,7 +1281,8 @@ def verifikasi_wajah():
     try:
         data = request.json
         username = data.get('username')
-        descriptor_client = np.array(data.get('descriptor'))  # array dari client
+        descriptor_client = np.array(
+            data.get('descriptor'))  # array dari client
 
         if not username or descriptor_client is None:
             return jsonify({"result": "error", "msg": "Data tidak lengkap"}), 400

@@ -46,6 +46,7 @@ body {
 
 .fa-sign-in {
   transform: scale(0.90);
+  transition: transform 0.2s ease;
 }
 
 .fa-sign-in:hover {
@@ -78,10 +79,12 @@ body {
 .nav-heart,
 .nav-cart {
   color: white;
+  transition: transform 0.2s ease;
 }
 
 .nav-profile {
   color: bisque;
+  transition: transform 0.2s ease;
 }
 
 .icon-src-nav:hover,
@@ -91,8 +94,26 @@ body {
   transform: scale(1.1);
 }
 
+.nava-input {
+  color: white;
+}
+
+.nava-input:hover {
+  color: white;
+  transform: scale(1.05);
+}
+
+.nava-out {
+  color: wheat;
+  /* cursor: pointer; */
+}
+
+.nava-out:hover {
+  color: wheat;
+  transform: scale(1.05);
+}
+
 .box {
-  width: 48%;
   height: auto;
   padding: 40px;
   display: flex;
@@ -100,6 +121,7 @@ body {
   background-color: #fff;
   border-radius: 10px;
   margin-bottom: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .box-bg1 {
@@ -107,14 +129,17 @@ body {
   box-shadow: 0 4px 4px rgba(0, 74, 216, 0.5);
 }
 
+.box-bg1:hover {
+  transform: translateY(-3px);
+}
+
 .box-bg2 {
   border: 1px solid rgba(216, 65, 0, 0.5);
   box-shadow: 0 4px 4px rgba(216, 65, 0, 0.5);
 }
 
-.box-bg3 {
-  border: 1px solid rgb(241, 255, 45);
-  box-shadow: 0 4px 4px rgba(241, 255, 45);
+.box-bg2:hover {
+  transform: translateY(-3px);
 }
 
 .dash {
@@ -127,7 +152,6 @@ body {
 
 .count {
   font-size: 16px;
-  color: #555;
 }
 
 .info {
@@ -310,13 +334,13 @@ body {
 
 .card-book-img,
 .detail-img {
-  height: 400px;
+  /* height: 400px; */
   object-fit: cover;
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
 }
 
 .card-book-img1 {
-  height: 350px;
+  /* height: 350px; */
   object-fit: cover;
 }
 
@@ -328,11 +352,16 @@ body {
   background-color: #FF0000;
   color: #fff;
   border-radius: 78px;
-  padding: 10px 30px;
+  width: 50%;
+  /* padding: 10px 30px; */
 }
 
 .card-body-btn:hover {
   background-color: #ff00008c;
+}
+
+#book-btn a i {
+  transition: transform 0.2s ease;
 }
 
 #book-btn a i:hover {
@@ -346,10 +375,10 @@ body {
 }
 
 .card-admin-btn {
-  width: 100%;
-  max-width: 100px;
+  width: 40%;
+  /* max-width: 100px; */
   color: #fff;
-  border-radius: 60px;
+  border-radius: 15px;
 }
 
 .m-top-100 {
@@ -401,8 +430,13 @@ body {
   color: green;
 }
 
+.tombol-jumlah {
+  transform: scale(0.80);
+  transition: transform 0.2s ease;
+}
+
 .tombol-jumlah:hover {
-  transform: scale(1.05);
+  transform: scale(0.85);
 }
 
 .dropdown {
@@ -796,6 +830,10 @@ body {
   margin: 0 auto;
   width: 80%;
   border-radius: 5px;
+}
+
+.nolog-btn {
+  transition: transform 0.2s ease;
 }
 
 .nolog-btn:hover {

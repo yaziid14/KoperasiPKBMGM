@@ -671,25 +671,31 @@ function tampil_admin() {
             let order_count = new Set(rows2.filter(x => x['order_id']).map(x => x['order_id'])).size;
 
             let dashboard = `
-                <div class="box box-bg1 my-2 mx-2">
-                    <div class="info">
-                        <h3 class="semibold">Pengguna</h3>
-                        <p class="count regular">
-                            <b style="color: #004ad880;">${count1}</b>
-                            <a href="#" onclick="lihatUser()" class="text-decoration-none text-dark fw-semibold" data-bs-toggle="modal" data-bs-target="#userModal">Pengguna</a>
-                        </p>
-                    </div>
-                    <i class="fa-solid fa-user"></i>
+                <div class="col mt-3">
+                    <a href="#" onclick="lihatUser()" class="text-decoration-none text-dark">
+                        <div class="box box-bg1">
+                            <div class="info">
+                                <h3 class="semibold">Pengguna</h3>
+                                <p class="count fw-semibold">
+                                    <b style="color: #004ad880;">${count1}</b> Pengguna
+                                </p>
+                            </div>
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                    </a>
                 </div>
-                <div class="box box-bg2 my-2 mx-2">
-                    <div class="info">
-                        <h3 class="semibold">Transaksi</h3>
-                        <p class="count regular">
-                            <b style="color: #d8410080;">${order_count}</b>
-                            <a href="#" onclick="lihatOrder()" class="text-decoration-none text-dark fw-semibold">Orders</a>
-                        </p>
-                    </div>
-                    <i class="fa fa-shopping-cart"></i>
+                <div class="col mt-3">
+                    <a href="#" onclick="lihatOrder()" class="text-decoration-none text-dark">
+                       <div class="box box-bg2">
+                            <div class="info">
+                                <h3 class="semibold">Transaksi</h3>
+                                <p class="count fw-semibold">
+                                    <b style="color: #d8410080;">${order_count}</b> Orders
+                                </p>
+                            </div>
+                            <i class="fa fa-shopping-cart"></i>
+                        </div>
+                    </a>
                 </div>`;
             $('#dashboard').append(dashboard);
 
@@ -736,9 +742,9 @@ function tampil_admin() {
                 <div class="col">
                     <div class="card card-book">
                         <a href="/detail/${url}">${carouselHTML}</a>
-                        <div class="card-body mt-3">
+                        <div class="card-body">
                             <h5 id="${url}" class="fw-semibold text-center text-truncate d-flex align-items-center justify-content-center"
-                                style="min-height: 3rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
+                                style="min-height: 2rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
                             ${judul}
                             </h5>
                             <h6>Stok : ${stok}</h6>
@@ -774,7 +780,7 @@ function tampil_user() {
 
             // Tambahkan dashboard langsung di sini
             let dashboard = `
-            <div class="col">
+            <div class="col mt-3">
                 <a href="/favorite" class="text-decoration-none">
                     <div class="boxuser box-bg11 h-100">
                         <div class="info">
@@ -789,7 +795,7 @@ function tampil_user() {
                 </a>
             </div>
 
-            <div class="col">
+            <div class="col mt-3">
                 <a href="/cart" class="text-decoration-none">
                     <div class="boxuser box-bg22 h-100">
                         <div class="info">
@@ -804,7 +810,7 @@ function tampil_user() {
                 </a>
             </div>
 
-            <div class="col">
+            <div class="col mt-3">
                 <a href="/orders" class="text-decoration-none">
                     <div class="boxuser box-bg33 h-100">
                         <div class="info">
@@ -890,13 +896,13 @@ function tampil_user() {
                             </a>
                             <div class="card-body">
                                 <h5 class="fw-semibold text-center text-truncate d-flex align-items-center justify-content-center"
-                                    style="min-height: 3rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
+                                    style="min-height: 2rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
                                 ${judul}
                                 </h5>
                                 <h6>Stok : ${stok}</h6>
-                                <h5 class="regular py-2 harga">Rp.${harga.toLocaleString('id-ID')}</h5>
+                                <h5 class="regular harga">Rp.${harga.toLocaleString('id-ID')}</h5>
                             </div>
-                            <div class="d-flex justify-content-between px-2 pb-3" id="book-btn">
+                            <div class="d-flex justify-content-between px-2 pb-2" id="book-btn">
                                 <a onclick="favorite('${url}')">
                                     <i class="far fa-heart fa-2x" id="fav-${url}"></i>
                                 </a>
@@ -996,12 +1002,12 @@ function showcart() {
                             <a href="/detail/${url}">${carouselHTML}</a>
                             <div class="card-body">
                                 <h5 id="judul-${i}" class="fw-semibold text-center text-truncate d-flex align-items-center justify-content-center"
-                                    style="min-height: 3rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
+                                    style="min-height: 2rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
                                 ${judul}
                                 </h5>
                                 <h6>Stok : ${stok}</h6>
                                 <p class="d-none" id="ori-${i}">${harga}</p>
-                                <h5 class="regular py-2 harga" id="harga-${i}">Rp.${hargaFormatted}</h5>
+                                <h5 class="regular harga" id="harga-${i}">Rp.${hargaFormatted}</h5>
                             </div>
                             <div class="d-flex justify-content-around align-items-center gap-3">
                                 <button type="button" class="btn btn-danger rounded-circle btn-lg tombol-jumlah"
@@ -1515,13 +1521,13 @@ function showfav() {
                             </a>
                             <div class="card-body">
                                 <h5 class="fw-semibold text-center text-truncate d-flex align-items-center justify-content-center"
-                                    style="min-height: 3rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
+                                    style="min-height: 2rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
                                 ${judul}
                                 </h5>
                                 <h6>Stok : ${stok}</h6>
-                                <h5 class="regular py-2 harga">Rp.${parseInt(harga).toLocaleString('id-ID')}</h5>
+                                <h5 class="regular harga">Rp.${parseInt(harga).toLocaleString('id-ID')}</h5>
                             </div>
-                            <div class="d-flex justify-content-between px-2 pb-3" id="book-btn">
+                            <div class="d-flex justify-content-between px-2 pb-2" id="book-btn">
                                 <a onclick="favorite('${url}')">
                                     <i class="fas fa-heart fa-2x" id="fav-${url}"></i>
                                 </a>
@@ -1607,15 +1613,15 @@ function tampil() {
                         <a href="/detail/${url}">
                             ${carouselHTML}
                         </a>
-                        <div class="card-body mt-3">
+                        <div class="card-body">
                             <h5 class="fw-semibold text-center text-truncate d-flex align-items-center justify-content-center"
-                                style="min-height: 3rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
+                                style="min-height: 2rem; font-size: clamp(0.9rem, 1.2vw, 1.2rem); line-height: 1.2;">
                             ${judul}
                             </h5>
                             <h6>Stok : ${stok}</h6>
-                            <h5 class="regular py-2 harga" id="harga">Rp.${harga.toLocaleString('id-ID')}</h5>
+                            <h5 class="regular harga" id="harga">Rp.${harga.toLocaleString('id-ID')}</h5>
                         </div>
-                        <div class="d-flex justify-content-between px-2 pb-3">
+                        <div class="d-flex justify-content-between px-2 pb-2">
                             <a onclick="kelogin()"><i class="far fa-heart fa-2x nolog-btn"></i></a>
                             <a href="/detail/${url}" class="btn semibold card-body-btn">Detail</a>
                             <a onclick="kelogin()"><i class="fas fa-cart-plus fa-2x nolog-btn"></i></a>
@@ -2023,12 +2029,12 @@ function showorder(filter = 'aktif') {
                     for (let i = 0; i < covers.length; i++) {
                         let activeClass = i === 0 ? 'active' : '';
                         indicators += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${i + 1}"></button>`;
-                        inner += `<div class="carousel-item ${activeClass}"><img src="${covers[i]}" class="d-block w-100 rounded-3 img-ord" alt="Cover ${i + 1}"></div>`;
+                        inner += `<div class="carousel-item ${activeClass}"><img src="${covers[i]}" class="d-block w-100 rounded-3" alt="Cover ${i + 1}"></div>`;
                     }
 
                     return `
                         <div class="row g-4 align-items-center py-3 border-bottom order-group" data-orderid="${id}">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
                                     <div class="carousel-indicators">${indicators}</div>
                                     <div class="carousel-inner rounded-3">${inner}</div>
@@ -2056,12 +2062,12 @@ function showorder(filter = 'aktif') {
                                     <li class="list-group-item d-flex justify-content-between">
                                         <strong>Status:</strong>
                                         <span class="${status === 'dibatalkan' ? 'text-danger' :
-                            status === 'belum bayar' ? 'text-warning' :
-                                status === 'sudah bayar' ? 'text-info' :
-                                    status === 'menunggu pembayaran' ? 'text-primary' :
-                                        status === 'terkirim' ? 'text-secondary' :
+                                            status === 'belum bayar' ? 'text-warning' :
+                                            status === 'sudah bayar' ? 'text-info' :
+                                            status === 'menunggu pembayaran' ? 'text-primary' :
+                                            status === 'terkirim' ? 'text-secondary' :
                                             status === 'pesanan selesai' ? 'text-success' :
-                                                'text-secondary'}">
+                                            'text-secondary'}">
                                             ${item.status}
                                         </span>
                                     </li>
@@ -2531,7 +2537,6 @@ function startCountdown(id, orderTime) {
     }, 1000);
 }
 
-
 function hapusPesanan(orderId) {
     Swal.fire({
         title: 'Hapus Pesanan?',
@@ -2655,7 +2660,7 @@ function showorderadmin(filter = 'aktif') {
                     return `
                         <div class="row g-4 align-items-center py-3 border-bottom order-group" data-orderid="${id}">
                             <div class="col-md-4">
-                                <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
+                                <div id="${carouselId}" class="carousel slide mx-4" data-bs-ride="carousel">
                                     <div class="carousel-indicators">${indicators}</div>
                                     <div class="carousel-inner rounded-3">${inner}</div>
                                     <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
