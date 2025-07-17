@@ -170,6 +170,13 @@ def check_judul():
     return jsonify({'result': 'success', 'exists': exists})
 
 
+@app.route('/cek-valid-user')
+def cek_valid_user():
+    username = request.cookies.get('username')  # Sesuaikan nama cookie
+    user = db.login.find_one({"username": username})
+    return jsonify({'valid': bool(user)})
+
+
 @app.route('/registuser')
 def registuser():
     return render_template('regisuser.html')

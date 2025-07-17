@@ -167,10 +167,11 @@ function masuk() {
                 icon: 'success',
                 title: 'Kamu telah mendaftar sebagai User, terima kasih..',
                 showConfirmButton: false,
-                timer: 1000,
+                timer: 1500,
                 timerProgressBar: true
+            }).then(() => {
+                window.location.replace("/login");
             });
-            window.location.replace("/login");
         }
     });
 }
@@ -273,10 +274,11 @@ function masukadmin() {
                 icon: 'success',
                 title: 'Kamu telah mendaftar sebagai Admin, terima kasih',
                 showConfirmButton: false,
-                timer: 1000,
+                timer: 1500,
                 timerProgressBar: true
+            }).then(() => {
+                window.location.replace("/login");
             });
-            window.location.replace("/login");
         }
     });
 }
@@ -318,17 +320,44 @@ function check_admin() {
 
 function check_user() {
     let role = $.cookie('role');
+    let username = $.cookie('username'); // disesuaikan dengan cookie kamu
+
     if (role !== "user") {
         Swal.fire({
-            icon: 'error',             // Bisa: 'success', 'error', 'warning', 'info', 'question'
+            icon: 'error',
             title: 'Error',
             text: 'Kamu bukan User',
             confirmButtonColor: '#625f5f',
             confirmButtonText: 'OK'
+        }).then(() => {
+            // Hapus semua cookie terkait
+            $.removeCookie('mytoken', { path: '/' });
+            $.removeCookie('role', { path: '/' });
+            $.removeCookie('username', { path: '/' });
+            window.location.replace("/");
         });
-        window.location.replace("/")
+        return;
     }
+
+    // Lanjutkan cek user ke server
+    $.get('/cek-valid-user', function (res) {
+        if (!res.valid) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Akun Tidak Ditemukan',
+                text: 'Akun ini telah dihapus oleh admin',
+                confirmButtonColor: '#625f5f',
+                confirmButtonText: 'OK'
+            }).then(() => {
+                $.removeCookie('mytoken', { path: '/' });
+                $.removeCookie('role', { path: '/' });
+                $.removeCookie('username', { path: '/' });
+                window.location.replace("/login");
+            });
+        }
+    });
 }
+
 
 function no_login() {
     let role = $.cookie('role');
@@ -2062,12 +2091,12 @@ function showorder(filter = 'aktif') {
                                     <li class="list-group-item d-flex justify-content-between">
                                         <strong>Status:</strong>
                                         <span class="${status === 'dibatalkan' ? 'text-danger' :
-                                            status === 'belum bayar' ? 'text-warning' :
-                                            status === 'sudah bayar' ? 'text-info' :
-                                            status === 'menunggu pembayaran' ? 'text-primary' :
-                                            status === 'terkirim' ? 'text-secondary' :
+                            status === 'belum bayar' ? 'text-warning' :
+                                status === 'sudah bayar' ? 'text-info' :
+                                    status === 'menunggu pembayaran' ? 'text-primary' :
+                                        status === 'terkirim' ? 'text-secondary' :
                                             status === 'pesanan selesai' ? 'text-success' :
-                                            'text-secondary'}">
+                                                'text-secondary'}">
                                             ${item.status}
                                         </span>
                                     </li>
@@ -2795,6 +2824,8 @@ function lihatUser() {
             </tr>`;
                 tbody.append(row);
             });
+            const modal = new bootstrap.Modal(document.getElementById('userModal'));
+            modal.show();
         },
         error: function () {
             alert('Gagal mengambil data user');
@@ -2821,11 +2852,11 @@ function hapusUser(username) {
                     toast: true,
                     position: 'top-end',
                     showConfirmButton: false,
-                    timer: 2000,
+                    timer: 1000,
                     timerProgressBar: true
+                }).then(() => {
+                    location.reload();
                 });
-                $('#userModal').modal('hide');
-                location.reload();
             });
         }
     });
