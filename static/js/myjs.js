@@ -1140,7 +1140,7 @@ function sebelumco() {
     $("[id^='harga-']").each(function (index) {
         let hargaText = $(this).text();
         let harga = Number(hargaText.replace(/\D/g, ''));
-        let jumlah = Number($(`#jumlah-${index}`).text());
+        let jumlah = Number($(`#jumlah-${index}`).val());
         let judul = $(`#judul-${index}`).text().trim();
 
         if (jumlah > 0 && harga > 0) {
@@ -1153,7 +1153,7 @@ function sebelumco() {
             pilihanHTML += `
                 <div class="text-start mb-1">
                     <i class="fa-solid fa-box me-2 text-secondary"></i>
-                    <strong>${judul}</strong> (x${jumlah}) - Rp ${harga.toLocaleString('id-ID')}
+                    <strong>${judul}</strong> (x ${jumlah}) - Rp ${harga.toLocaleString('id-ID')}
                 </div>
             `;
         }
