@@ -697,11 +697,16 @@ def orderan():
         if not judul or jumlah <= 0 or harga <= 0:
             continue  # Skip jika data tidak valid
 
-        # Ambil cover dan AllCover dari koleksi barang
         book = db.barang.find_one({'JudulBuku': judul}, {
-            '_id': False, 'Cover': True, 'AllCover': True})
+            '_id': False,
+            'Cover': True,
+            'AllCover': True,
+            'URL': True
+        })
+
         cover = book.get('Cover', '') if book else ''
         all_cover = book.get('AllCover', []) if book else []
+        url = book.get('URL', '') if book else ''
 
         item.update({
             'order_id': order_id,
@@ -709,6 +714,7 @@ def orderan():
             'tanggal': mytime_str,
             'cover': cover,
             'AllCover': all_cover,
+            'url': url,
             'status': 'Belum Bayar',
             'waktu': now_utc
         })

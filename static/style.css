@@ -309,8 +309,18 @@ body {
   background-color: #0A868C;
 }
 
+.btn-info-save:hover {
+  /* border: 1px solid #0a858cb8; */
+  background-color: #0a858cb8;
+}
+
 .btn-logout {
   background-color: #FF0000;
+}
+
+.btn-logout:hover {
+  /* border: 1px solid #FF0000; */
+  background-color: #ff00009f;
 }
 
 .img-ord {

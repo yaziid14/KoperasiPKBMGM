@@ -39,7 +39,8 @@
     <script>
         $(document).ready(function () {
             no_login();
-            rolesearch();
+            navrole();
+            searchrole();
         });
     </script>
 </head>
@@ -60,26 +61,11 @@
                             </a>
                         </div>
                     </form>
-                    <div id="navadmin">
-                        <div class="d-flex">
-                            <a class="nav-link semibold me-2 nava-input" aria-current="page" href="/tambah">Input
-                                Item</a>
-                            <a class="nav-link semibold me-2 nava-out" href="#" onclick="sign_out()">Keluar</a>
-                        </div>
+                    <div id="navadmindetail">
                     </div>
-                    <div id="navuser">
-                        <a href="/favorite"><i class="fa fa-heart fa-2x me-4 nav-heart" aria-hidden="true"></i></a>
-                        <a href="/cart"><i class="fa fa-shopping-cart fa-2x me-4 nav-cart" aria-hidden="true"></i></a>
-                        <div class="dropdown">
-                            <button onclick="toggleDropdown()" class="profile-btn">
-                                <i class="fa fa-user fa-2x me-2 nav-profile" aria-hidden="true"></i>
-                            </button>
-                            <div id="profileDropdown" class="dropdown-content">
-                                <a href="/profile">Profil Saya</a>
-                                <a href="/orders">Pesanan Saya</a>
-                                <a href="#" onclick="sign_out()">Keluar</a>
-                            </div>
-                        </div>
+                    <div id="navuserdetail">
+                    </div>
+                    <div id="navnotuserdetail">
                     </div>
                 </div>
             </div>

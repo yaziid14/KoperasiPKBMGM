@@ -1254,27 +1254,55 @@ function check_out(dataPesanan) {
     });
 }
 
-// Page Detail
-function roledetail() {
+function searchrole() {
     let role = $.cookie('role');
-
-    // Sembunyikan semua terlebih dahulu
-    $('#navadmindetail').hide();
-    $('#navuserdetail').hide();
-    $('#navnotuserdetail').hide(); // pastikan ada juga ID ini
-
     if (role === 'admin') {
-        $('#navadmindetail').show();
-        // $('#navnotuserdetail').hide();
+        $('#carduser').empty();
     } else if (role === 'user') {
-        $('#navuserdetail').show();
-        // $('#navnotuserdetail').hide();
+        $('#cardadmin').empty();
     } else {
-        // Jika bukan admin atau user (misal null, guest, dll)
-        $('#navnotuserdetail').show();
+        window.location.href = '/';
     }
 }
 
+function navrole() {
+    let role = $.cookie('role');
+
+    // Kosongkan semua kontainer terlebih dahulu
+    $('#navadmindetail').empty();
+    $('#navuserdetail').empty();
+    $('#navnotuserdetail').empty();
+
+    if (role === 'admin') {
+        $('#navadmindetail').html(`
+                        <div class="d-flex">
+                            <a class="nav-link semibold me-2 nava-input" aria-current="page" href="/tambah">Input
+                                Item</a>
+                            <a class="nav-link semibold me-2 nava-out" href="#" onclick="sign_out()">Keluar</a>
+                        </div>
+        `);
+    } else if (role === 'user') {
+        $('#navuserdetail').html(`
+                        <a href="/favorite"><i class="fa fa-heart fa-2x me-4 nav-heart" aria-hidden="true"></i></a>
+                        <a href="/cart"><i class="fa fa-shopping-cart fa-2x me-4 nav-cart" aria-hidden="true"></i></a>
+                        <div class="dropdown">
+                            <button onclick="toggleDropdown()" class="profile-btn">
+                                <i class="fa fa-user fa-2x me-2 nav-profile" aria-hidden="true"></i>
+                            </button>
+                            <div id="profileDropdown" class="dropdown-content">
+                                <a href="/profile">Profil Saya</a>
+                                <a href="/orders">Pesanan Saya</a>
+                                <a href="#" onclick="sign_out()">Keluar</a>
+                            </div>
+                        </div>
+        `);
+    } else {
+        $('#navnotuserdetail').html(`
+                        <a href="/login"><i class="fa fa-sign-in fa-3x me-2" style="color: white;"
+                                aria-hidden="true"></i></a>
+        `);
+    }
+}
 
 function detail() {
     let judul = detail_book['JudulBuku'];
@@ -1834,23 +1862,6 @@ function cekKetersediaanDescriptor(username) {
         });
 }
 
-// Page Search
-function rolesearch() {
-    let role = $.cookie('role');
-    $('#navadmin').hide();
-    $('#navuser').hide();
-    $('#cardadmin').hide();
-    $('#carduser').hide();
-    if (role === 'admin') {
-        $('#navadmin').show();
-        $('#cardadmin').show();
-    }
-    if (role === 'user') {
-        $('#navuser').show();
-        $('#carduser').show();
-    }
-}
-
 function postbook() {
     const judul = $('#judul').val().trim();
     const deskripsi = $('#deskripsi').val().trim();
@@ -2051,6 +2062,8 @@ function showorder(filter = 'aktif') {
                     totalSemua += harga;
                     jumlahSemua += jumlah;
 
+                    let url = item.url || '';
+
                     let carouselId = `carousel-${id}-${idx}`;
                     let covers = item.AllCover || [];
                     let indicators = '', inner = '';
@@ -2058,12 +2071,12 @@ function showorder(filter = 'aktif') {
                     for (let i = 0; i < covers.length; i++) {
                         let activeClass = i === 0 ? 'active' : '';
                         indicators += `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${i}" class="${activeClass}" aria-current="${activeClass ? 'true' : 'false'}" aria-label="Slide ${i + 1}"></button>`;
-                        inner += `<div class="carousel-item ${activeClass}"><img src="${covers[i]}" class="d-block w-100 rounded-3" alt="Cover ${i + 1}"></div>`;
+                        inner += `<div class="carousel-item ${activeClass}"><a href="/detail/${url}" class="text-decoration-none"><img src="${covers[i]}" class="d-block w-100 rounded-3" alt="Cover ${i + 1}"></a></div>`;
                     }
 
                     return `
                         <div class="row g-4 align-items-center py-3 border-bottom order-group" data-orderid="${id}">
-                            <div class="col-md-3">
+                            <div class="col-md-2 mx-5">
                                 <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
                                     <div class="carousel-indicators">${indicators}</div>
                                     <div class="carousel-inner rounded-3">${inner}</div>
@@ -2078,7 +2091,9 @@ function showorder(filter = 'aktif') {
                                 </div>
                             </div>
                             <div class="col-md-8">
-                                <h4 class="fw-bold text-info">${item.judul}</h4>
+                                <a href="/detail/${url}" class="text-decoration-none">
+                                    <h4 class="fw-bold text-info">${item.judul}</h4>
+                                </a>
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item d-flex justify-content-between">
                                         <strong>Jumlah:</strong>
