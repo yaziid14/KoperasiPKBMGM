@@ -2653,6 +2653,17 @@ function showorderadmin(filter = 'aktif') {
             let pembatalanList = response['daftarpembatalan'] || [];
             let pembatalanSet = new Set(pembatalanList.map(p => p.order_id));
 
+            // Buat mapping username -> alamat
+            let users = response['daftaruser'] || [];
+            let userMap = {};
+            for (let u of users) {
+                userMap[u.username] = {
+                    alamat: u.alamat,
+                    hp: u.nohp,
+                    email: u.email
+                };
+            }
+
             $('#showoderanadmin').empty();
 
             let groupedOrders = {};
@@ -2672,7 +2683,6 @@ function showorderadmin(filter = 'aktif') {
                 let { order_id: id, tanggal: waktu } = group[0];
                 let status = group[0].status.toLowerCase();
 
-                // Perbaikan disini:
                 if (filter === 'aktif') {
                     if (status === 'pesanan selesai' || status === 'dibatalkan') continue;
                 } else if (status !== filter) {
@@ -2682,6 +2692,7 @@ function showorderadmin(filter = 'aktif') {
                 let totalSemua = 0;
                 let jumlahSemua = 0;
                 let username = group[0].username;
+                let userData = userMap[username] || {};
 
                 let itemHTML = group.map((item, idx) => {
                     let jumlah = parseInt(item.jumlah);
@@ -2736,9 +2747,15 @@ function showorderadmin(filter = 'aktif') {
                                     status === 'menunggu pembayaran' ? 'text-primary' :
                                         status === 'terkirim' ? 'text-secondary' :
                                             status === 'pesanan selesai' ? 'text-success' :
-                                                'text-secondary'}">
-                                            ${item.status}
-                                        </span>
+                                                'text-secondary'}">${item.status}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <strong>Alamat:</strong>
+                                        <span class="text-wrap">${userData.alamat || '-'}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <strong>HP / Email:</strong>
+                                        <span>${userData.hp || '-'} / ${userData.email || '-'}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -2771,17 +2788,9 @@ function showorderadmin(filter = 'aktif') {
 
                 let badgeStatus = '';
                 if (status === 'dibatalkan') {
-                    badgeStatus = `
-                        <div class="position-absolute top-0 end-0 mt-2 me-3">
-                            <span class="badge bg-danger">❌ DIBATALKAN</span>
-                        </div>
-                    `;
+                    badgeStatus = `<div class="position-absolute top-0 end-0 mt-2 me-3"><span class="badge bg-danger">❌ DIBATALKAN</span></div>`;
                 } else if (status === 'pesanan selesai') {
-                    badgeStatus = `
-                        <div class="position-absolute top-0 end-0 mt-2 me-3">
-                            <span class="badge bg-success">✔️ SELESAI</span>
-                        </div>
-                    `;
+                    badgeStatus = `<div class="position-absolute top-0 end-0 mt-2 me-3"><span class="badge bg-success">✔️ SELESAI</span></div>`;
                 }
 
                 let temp_html = `
@@ -2867,10 +2876,10 @@ function hapusUser(username) {
                     toast: true,
                     position: 'top-end',
                     showConfirmButton: false,
-                    timer: 1000,
+                    timer: 500,
                     timerProgressBar: true
                 }).then(() => {
-                    location.reload();
+                    lihatUser();
                 });
             });
         }
