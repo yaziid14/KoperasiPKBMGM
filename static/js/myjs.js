@@ -2843,7 +2843,7 @@ function lihatUser() {
               <td>${alamat}</td>
               <td>
                 <button class="btn btn-danger btn-sm" onclick="hapusUser('${user.username}')">Hapus</button>
-                <button class="btn btn-warning btn-sm" onclick="resetPassword('${user.username}')">Reset Password</button>
+                <button class="btn btn-warning btn-sm" onclick="resetPassword('${user.username}')">Reset</button>
               </td>
             </tr>`;
                 tbody.append(row);
