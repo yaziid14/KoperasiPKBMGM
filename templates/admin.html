@@ -86,9 +86,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="mb-3">
+                        <button id="hapusTerpilih" class="btn btn-danger btn-sm">Hapus Terpilih</button>
+                    </div>
                     <table class="table table-hover table-bordered align-middle">
                         <thead class="table-light">
                             <tr class="text-center">
+                                <th><input type="checkbox" id="checkAll"></th>
                                 <th>Foto</th>
                                 <th>Username</th>
                                 <th>Email</th>
@@ -97,12 +101,14 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="userTableBody"></tbody>
+                        <tbody id="userTableBody">
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
+
 
     <!-- Modal Konfirmasi Logout -->
     <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
@@ -124,6 +130,68 @@
     </div>
 
     <script defer src="{{ url_for('static', filename='js/myjs.js') }}"></script>
+
+    <script>
+        // Checkbox: Pilih Semua
+        $(document).on('change', '#checkAll', function () {
+            $('.check-user').prop('checked', this.checked);
+        });
+
+        // Sinkronisasi checkbox individual
+        $(document).on('change', '.check-user', function () {
+            const total = $('.check-user').length;
+            const checked = $('.check-user:checked').length;
+            $('#checkAll').prop('checked', total === checked);
+        });
+
+        // Tombol Hapus Terpilih
+        $('#hapusTerpilih').on('click', function () {
+            const selectedUsers = $('.check-user:checked').map(function () {
+                return $(this).data('username');
+            }).get();
+
+            if (selectedUsers.length === 0) {
+                Swal.fire('Oops!', 'Tidak ada pengguna yang dipilih.', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: `Yakin ingin menghapus ${selectedUsers.length} pengguna terpilih?`,
+                text: "Tindakan ini tidak dapat dibatalkan.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#6c757d",
+                confirmButtonText: "Hapus",
+                cancelButtonText: "Batal"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/hapus-banyak-user',  // ganti sesuai route Flask kamu
+                        contentType: 'application/json',
+                        data: JSON.stringify({ usernames: selectedUsers }),
+                        success: function (res) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: res.msg,
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 1000,
+                                timerProgressBar: true
+                            }).then(() => {
+                                lihatUser();
+                            });
+                        },
+                        error: function () {
+                            Swal.fire('Gagal', 'Gagal menghapus pengguna.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>

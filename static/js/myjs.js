@@ -2818,7 +2818,6 @@ function showorderadmin(filter = 'aktif') {
     });
 }
 
-
 function lihatUser() {
     $.ajax({
         type: 'GET',
@@ -2835,19 +2834,22 @@ function lihatUser() {
                 const alamat = user.alamat || '-';
 
                 const row = `
-            <tr class="text-center">
-              <td><img src="${foto}" alt="foto-${user.username}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;"></td>
-              <td>${user.username}</td>
-              <td>${email}</td>
-              <td>${nohp}</td>
-              <td>${alamat}</td>
-              <td>
-                <button class="btn btn-danger btn-sm" onclick="hapusUser('${user.username}')">Hapus</button>
-                <button class="btn btn-warning btn-sm" onclick="resetPassword('${user.username}')">Reset</button>
-              </td>
-            </tr>`;
+                <tr class="text-center">
+                    <td><input type="checkbox" class="check-user" data-username="${user.username}"></td>
+                    <td><img src="${foto}" alt="foto-${user.username}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;"></td>
+                    <td>${user.username}</td>
+                    <td>${email}</td>
+                    <td>${nohp}</td>
+                    <td>${alamat}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="hapusUser('${user.username}')">Hapus</button>
+                        <button class="btn btn-warning btn-sm" onclick="resetPassword('${user.username}')">Reset</button>
+                    </td>
+                </tr>`;
                 tbody.append(row);
             });
+
+            // Tampilkan modal setelah semua user dimuat
             const modal = new bootstrap.Modal(document.getElementById('userModal'));
             modal.show();
         },

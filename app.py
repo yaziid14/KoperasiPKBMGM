@@ -395,6 +395,44 @@ def hapus_user():
     return jsonify({'msg': f'User {username} berhasil dihapus.'})
 
 
+@app.route('/hapus-banyak-user', methods=['POST'])
+def hapus_banyak_user():
+    data = request.get_json()
+    usernames = data.get('usernames', [])
+
+    if not usernames:
+        return jsonify({'msg': 'Tidak ada username dikirim.'}), 400
+
+    deleted_users = []
+    for username in usernames:
+        user_data = db.login.find_one({'username': username})
+        if not user_data:
+            continue  # skip kalau user tidak ditemukan
+
+        # Hapus foto profil jika bukan default
+        old_url = user_data.get("profile_default", "")
+        if old_url and "res.cloudinary.com" in old_url and not old_url.startswith('/static/'):
+            public_id = extract_public_id(old_url)
+            if public_id:
+                try:
+                    result = cloudinary.uploader.destroy(public_id, invalidate=True)
+                    print(f"Hapus foto profil: {public_id} → {result}")
+                except Exception as e:
+                    print(f"Gagal menghapus gambar profil Cloudinary: {e}")
+
+        # Hapus data user dari semua koleksi terkait
+        db.login.delete_one({'username': username})
+        db.cart.delete_many({'username': username})
+        db.favorite.delete_many({'username': username})
+        db.livechat.delete_many({'username': username})
+        db.orderan.delete_many({'username': username})
+        db.pembatalan.delete_many({'username': username})
+
+        deleted_users.append(username)
+
+    return jsonify({'msg': f'{len(deleted_users)} pengguna berhasil dihapus.', 'deleted': deleted_users})
+
+
 @app.route('/reset-password', methods=['POST'])
 def reset_password():
     username = request.form.get('username_give')
